@@ -111,7 +111,7 @@ window.clock = {
     document.querySelector("#pauseTimer").dispatchEvent(new Event("change"));
     document.querySelector("#startBtn").onclick = function() { window.clock.setTimer(); };
     document.querySelector("#container").onclick = function() { window.clock.pause(); };
-        
+
     setInterval(function() {
       window.clock.tick();
     }, 1000);
