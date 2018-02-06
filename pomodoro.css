@@ -1,0 +1,67 @@
+body {
+    font-family: 'Tahoma', sans-serif !important;
+    color: #fff;
+    background-color: #252827;
+    width:250px
+  }
+  div {
+    padding: 10px;
+  }
+  input[type=range], select {
+      width: 100%;
+      padding: 12px 20px;
+      margin: 8px 0;
+      display: inline-block;
+      border: 1px solid #252827;
+      box-sizing: border-box;
+  }
+  button {
+      width: 100%;
+      background-color: #4CAF50;
+      color: white;
+      padding: 14px 20px;
+      margin: 6px 0;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+  }
+  button:hover {
+      background-color: #45a049;
+  }
+  #timeCounter {
+    text-align: center;
+    font-size: 3em;
+  }
+  #pageDiv{
+    min-width:350px;
+    max-width:700px;
+    position:relative;
+    margin:auto;
+  }
+  #container {
+    margin: auto;
+    cursor: pointer;
+  }
+  
+  #face {
+      stroke-width: 2px;
+    stroke: #fff; 
+  }
+  #clockHandSeconds { 
+      stroke-width: 1px; 
+    stroke: #f55; 
+  }
+  #clockHandMinutes { 
+      stroke-width: 1px; 
+    stroke: #fff; 
+  }
+  #clockOnABreak {
+    fill:  #2ecc71; 
+    color: #fff;
+    display: none;
+  }
+  .mark {
+      stroke-width: 1px; 
+    stroke: #fff;   
+  }
+  

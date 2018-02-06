@@ -1,0 +1,20 @@
+{
+
+  "manifest_version": 2,
+  "name": "Pomodoro clock",
+  "version": "1.0",
+
+  "description": "A pomodoro clock in your browser to hack your productivity.",
+
+  "icons": {
+    "48": "icons/clock-48.png"
+  },
+  "browser_action": {
+    "default_title": "Pomodoro",
+    "default_icon": { "48": "icons/clock-48.png" },
+    "default_popup": "pomodoro.html"
+  },
+  "background": {
+    "scripts": ["pomodoro.js"]
+  }
+}
