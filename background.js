@@ -8,6 +8,21 @@ const clock = {
     ring:{},
     start: function() {
         this.ticking = true;
+        this.paused = false;
+        this.seconds = this.streakTimer*60;
+        this.onABreak = false;
+        chrome.browserAction.setIcon({path: "icons/clock_red-48.png"});
+        if (typeof(Storage) !== "undefined") {
+            localStorage.streakTimer = this.streakTimer;
+            localStorage.pauseTimer= this.pauseTimer;
+        }
+    },
+    reset: function() {
+        this.ticking = false;
+        this.paused = false;
+        this.seconds = this.streakTimer*60;
+        this.onABreak = false;
+        chrome.browserAction.setIcon({path: "icons/clock-48.png"});
         if (typeof(Storage) !== "undefined") {
             localStorage.streakTimer = this.streakTimer;
             localStorage.pauseTimer= this.pauseTimer;
@@ -41,9 +56,11 @@ const clock = {
 
             let minutes = 0;
             if(this.onABreak) {
-            minutes = this.pauseTimer;
+                chrome.browserAction.setIcon({path: "icons/clock_green-48.png"});
+                minutes = this.pauseTimer;
             } else {
-            minutes = this.streakTimer;
+                chrome.browserAction.setIcon({path: "icons/clock_red-48.png"});
+                minutes = this.streakTimer;
             }
             this.seconds = minutes * 60;
             if(Notification.permission === "granted") {
@@ -90,6 +107,8 @@ if(chrome !== undefined) {
     const browser = chrome;
     console.log(browser.runtime);
 }
+
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     console.log("received message from content script: " + JSON.stringify(message));
     if (message.command === "getCurrentState") {
@@ -100,7 +119,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         clock.pauseTimer = message.pauseTimer;
         clock.start();
         sendResponse(true);
-    } else if (message.command === "pause") {
+    } else if (message.command === "reset") {
+        clock.streakTimer = message.streakTimer;
+        clock.pauseTimer = message.pauseTimer;
+        clock.reset();
+        sendResponse(true);
+   } else if (message.command === "pause") {
         clock.pause();
         sendResponse(true);
     }
