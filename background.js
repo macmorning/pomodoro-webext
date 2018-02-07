@@ -6,37 +6,28 @@ const clock = {
     streakTimer: 0,
     pauseTimer: 0,
     ring:{},
-    reset: function() {
-        this.init();
-    },
     start: function() {
-        this.init();
         this.ticking = true;
+        if (typeof(Storage) !== "undefined") {
+            localStorage.streakTimer = this.streakTimer;
+            localStorage.pauseTimer= this.pauseTimer;
+        }
     },
     pause: function() {
       this.paused = !this.paused;
     },
-    init: function() {
-      if (typeof(Storage) !== "undefined") {
-        localStorage.streakTimer = this.streakTimer;
-        localStorage.pauseTimer= this.pauseTimer;
-      }
-      this.seconds = this.streakTimer*60;
-      this.onABreak = false;
-      this.paused = false;
-    },
     getCurrentState: function() {
-        return {"event": "updateClock", "seconds": this.seconds, "onABreak": this.onABreak, "ticking": this.ticking, "paused": this.paused};
-    },
-    updateClock: function(tabs) {
-        for (let tab of tabs) {
-            // tab.url requires the `tabs` permission
-            let message = {"event": "updateClock", "currentState": this.getCurrentState()};
-            console.log("sending message to " + tab.id + " / " + tab.url + " / " + JSON.stringify(message));
-            browser.tabs.sendMessage(tab.id,message);
-        }
+        return {
+            "seconds": this.seconds, 
+            "onABreak": this.onABreak, 
+            "ticking": this.ticking, 
+            "paused": this.paused,
+            "streakTimer": this.streakTimer,
+            "pauseTimer": this.pauseTimer
+        };
     },
     tick: function() {
+        console.log("tick - " + this.seconds);
         if(!this.ticking || this.paused) {
             return true;
         }
@@ -56,14 +47,13 @@ const clock = {
             }
             this.seconds = minutes * 60;
             if(Notification.permission === "granted") {
-            let text = (this.onABreak ? "Time for a " + minutes + " min break" : "Ready for a new " + minutes + " min streak?");
-            let notification = new Notification("Ding !", {
-                icon: 'icons/clock-48.png',
-                body: text
-            });
+                let text = (this.onABreak ? "Time for a " + minutes + " min break" : "Ready for a new " + minutes + " min streak?");
+                let notification = new Notification("Ding !", {
+                    icon: 'icons/clock-48.png',
+                    body: text
+                });
             }
         }
-        browser.tabs.query({currentWindow: true}).then(this.updateClock);
         return true;
     }
 };  
@@ -79,6 +69,7 @@ if ("Notification" in window) {
 if (typeof(Storage) !== "undefined") {
     if(parseInt(localStorage.streakTimer)) {
         clock.streakTimer = parseInt(localStorage.streakTimer);
+        clock.seconds = clock.streakTimer*60;
     }
     if(parseInt(localStorage.pauseTimer)) {
         clock.pauseTimer = parseInt(localStorage.pauseTimer);
@@ -102,12 +93,15 @@ if(chrome !== undefined) {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     console.log("received message from content script: " + JSON.stringify(message));
     if (message.command === "getCurrentState") {
-        sendResponse({"currentState":clock.getCurrentState()});
+        console.log("sending response: " + JSON.stringify(clock.getCurrentState()));
+        sendResponse(clock.getCurrentState());
     } else if (message.command === "start") {
         clock.streakTimer = message.streakTimer;
         clock.pauseTimer = message.pauseTimer;
         clock.start();
+        sendResponse(true);
     } else if (message.command === "pause") {
         clock.pause();
+        sendResponse(true);
     }
 });
