@@ -2,6 +2,8 @@ const isChrome = (chrome !== undefined);
 
 const clock = {
     seconds: 0,
+    timeStarted: 0,
+    alarmAt: 0,
     onABreak: false,
     ticking: false,
     paused: false,
@@ -9,95 +11,97 @@ const clock = {
     pauseTimer: 0,
     ring: {},
     start: function () {
-        this.ticking = true;
-        this.paused = false;
-        this.seconds = this.streakTimer * 60;
-        this.onABreak = false;
+        clock.ticking = true;
+        clock.timeStarted = Date.now();
+        clock.alarmAt = clock.timeStarted + (clock.streakTimer * 60000);
+        clock.paused = false;
+        clock.seconds = clock.streakTimer * 60;
+        clock.onABreak = false;
         if (isChrome) {
             chrome.browserAction.setIcon({path: "icons/clock_red-48.png"});
+            chrome.alarms.create("alarm", { "delayInMinutes": parseInt(clock.streakTimer) });
         } else {
             browser.browserAction.setIcon({path: "icons/clock_red-48.png"});
+            browser.alarms.create("alarm", { "delayInMinutes": parseInt(clock.streakTimer) });
         }
         if (typeof (Storage) !== "undefined") {
-            localStorage.streakTimer = this.streakTimer;
-            localStorage.pauseTimer = this.pauseTimer;
+            localStorage.streakTimer = clock.streakTimer;
+            localStorage.pauseTimer = clock.pauseTimer;
         }
     },
     reset: function () {
-        this.ticking = false;
-        this.paused = false;
-        this.seconds = this.streakTimer * 60;
-        this.onABreak = false;
+        clock.ticking = false;
+        clock.paused = false;
+        clock.seconds = clock.streakTimer * 60;
+        clock.onABreak = false;
         if (isChrome) {
             chrome.browserAction.setIcon({path: "icons/clock-48.png"});
+            chrome.alarms.clear("alarm");
         } else {
             browser.browserAction.setIcon({path: "icons/clock-48.png"});
+            browser.alarms.clear("alarm");
         }
         if (typeof (Storage) !== "undefined") {
-            localStorage.streakTimer = this.streakTimer;
-            localStorage.pauseTimer = this.pauseTimer;
+            localStorage.streakTimer = clock.streakTimer;
+            localStorage.pauseTimer = clock.pauseTimer;
         }
     },
     pause: function () {
-        this.paused = !this.paused;
+        clock.paused = !clock.paused;
     },
     getCurrentState: function () {
+        if (clock.ticking) {
+            clock.seconds = Math.floor((clock.alarmAt - Date.now()) / 1000);
+        }
         return {
-            "seconds": this.seconds,
-            "onABreak": this.onABreak,
-            "ticking": this.ticking,
-            "paused": this.paused,
-            "streakTimer": this.streakTimer,
-            "pauseTimer": this.pauseTimer
+            "seconds": clock.seconds,
+            "onABreak": clock.onABreak,
+            "ticking": clock.ticking,
+            "paused": clock.paused,
+            "streakTimer": clock.streakTimer,
+            "pauseTimer": clock.pauseTimer
         };
     },
-    tick: function () {
-        if (!this.ticking || this.paused) {
+    alarm: function (alarm) {
+        if (!clock.ticking || clock.paused) {
             return true;
         }
-        if (this.seconds > 0) {
-            this.seconds--;
-        } else {
-            this.onABreak = !this.onABreak;
-            try {
-                this.ring.play();
-            } catch (e) {
-                console.log("could not ring: " + e);
-            }
+        clock.onABreak = !clock.onABreak;
+        try {
+            clock.ring.play();
+        } catch (e) {
+            console.log("could not ring: " + e);
+        }
 
-            let minutes = 0;
-            if (this.onABreak) {
-                if (isChrome) {
-                    chrome.browserAction.setIcon({path: "icons/clock_green-48.png"});
-                } else {
-                    browser.browserAction.setIcon({path: "icons/clock_green-48.png"});
-                }
-                minutes = this.pauseTimer;
+        let minutes = (clock.onABreak ? clock.pauseTimer : clock.streakTimer);
+        this.seconds = minutes * 60;
+        clock.timeStarted = Date.now();
+        clock.alarmAt = clock.timeStarted + (clock.streakTimer * 60000);
+        if (isChrome) {
+            chrome.alarms.clear("alarm");
+            chrome.alarms.create("alarm", { "delayInMinutes": parseInt(minutes) });
+            chrome.browserAction.setIcon({path: (clock.onABreak ? "icons/clock_green-48.png" : "icons/clock_red-48.png")});
+        } else {
+            browser.alarms.clear("alarm");
+            browser.alarms.create("alarm", { "delayInMinutes": parseInt(minutes) });
+            browser.browserAction.setIcon({path: (clock.onABreak ? "icons/clock_green-48.png" : "icons/clock_red-48.png")});
+        }
+
+        try {
+            let text = (clock.onABreak ? "Time for a " + minutes + " min break" : "Ready for a new " + minutes + " min streak?");
+            let notifDetail = {
+                type: "basic",
+                title: "Ding!",
+                iconUrl: "icons/clock-48.png",
+                message: text
+            };
+            if (isChrome) {
+                chrome.notifications.create(notifDetail);
             } else {
-                if (isChrome) {
-                    chrome.browserAction.setIcon({path: "icons/clock_red-48.png"});
-                } else {
-                    browser.browserAction.setIcon({path: "icons/clock_red-48.png"});
-                }
-                minutes = this.streakTimer;
+                browser.notifications.create(notifDetail);
             }
-            this.seconds = minutes * 60;
-            try {
-                let text = (this.onABreak ? "Time for a " + minutes + " min break" : "Ready for a new " + minutes + " min streak?");
-                let notifDetail = {
-                    type: "basic",
-                    title: "Ding!",
-                    iconUrl: "icons/clock-48.png",
-                    message: text
-                };
-                if (isChrome) {
-                    chrome.notifications.create(notifDetail);
-                } else {
-                    browser.notifications.create(notifDetail);
-                }
-            } catch (e) {
-                console.log("could not display notification: " + e);
-            }
+        } catch (e) {
+            console.log("could not display notification: " + e);
         }
         return true;
     }
@@ -117,10 +121,6 @@ if (typeof (Storage) !== "undefined") {
 // Initialize and load the ring sound
 clock.ring = document.createElement("audio");
 clock.ring.setAttribute("src", "sound/bell-ringing-01.mp3");
-
-setInterval(function () {
-    clock.tick();
-}, 1000);
 
 // Configure message listener
 var msgListener = function (message, sender, sendResponse) {
@@ -146,6 +146,8 @@ var msgListener = function (message, sender, sendResponse) {
 
 if (isChrome) {
     chrome.runtime.onMessage.addListener(msgListener);
+    chrome.alarms.onAlarm.addListener(clock.alarm);
 } else {
     browser.runtime.onMessage.addListener(msgListener);
+    browser.alarms.onAlarm.addListener(clock.alarm);
 }

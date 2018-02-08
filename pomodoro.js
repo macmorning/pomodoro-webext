@@ -68,7 +68,7 @@ window.onload = function () {
     document.querySelector("#streakTimer").dispatchEvent(new Event("input"));
     document.querySelector("#pauseTimer").dispatchEvent(new Event("input"));
     document.querySelector("#startBtn").onclick = function () { if (!clock.ticking) { clock.start(); } else { clock.reset(); } };
-    document.querySelector("#container").onclick = function () { clock.pause(); };
+    // document.querySelector("#container").onclick = function () { clock.pause(); };
 
     setInterval(function () {
         clock.tick();

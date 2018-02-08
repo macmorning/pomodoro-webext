@@ -17,5 +17,5 @@
     "default_icon": { "48": "icons/clock-48.png" },
     "default_popup": "pomodoro.html"
   },
-  "permissions": ["storage", "notifications"]
+  "permissions": ["storage", "notifications", "alarms"]
 }
