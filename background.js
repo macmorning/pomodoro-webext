@@ -74,9 +74,9 @@ const clock = {
         }
 
         let minutes = (clock.onABreak ? clock.pauseTimer : clock.streakTimer);
-        this.seconds = minutes * 60;
+        clock.seconds = minutes * 60;
         clock.timeStarted = Date.now();
-        clock.alarmAt = clock.timeStarted + (clock.streakTimer * 60000);
+        clock.alarmAt = clock.timeStarted + (clock.seconds * 1000);
         if (isChrome) {
             chrome.alarms.clear("alarm");
             chrome.alarms.create("alarm", { "delayInMinutes": parseInt(minutes) });
