@@ -40,9 +40,7 @@ body {
   }
   #container {
     margin: auto;
-    cursor: pointer;
   }
-  
   #face {
       stroke-width: 2px;
     stroke: #fff; 

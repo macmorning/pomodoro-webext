@@ -3,9 +3,12 @@
   "manifest_version": 2,
   "name": "Pomodoro clock",
   "version": "1.0",
-
-  "description": "A pomodoro clock in your browser to hack your productivity.",
-
+  "description": "A simple pomodoro clock in your browser to hack your productivity.",
+  "homepage_url": "https://github.com/macmorning/pomodoro-webext",
+  "developer": {
+    "name": "Sylvain YVON",
+    "url": "https://github.com/macmorning"
+  },
   "icons": {
     "48": "icons/clock-48.png"
   },
