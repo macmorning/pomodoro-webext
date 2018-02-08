@@ -1,0 +1,11 @@
+{
+    "extends": "standard",
+    "rules": {
+        "indent": ["error", 4],
+        "quotes": ["error", "double"],
+        "semi": ["error", "always"],
+        "no-cond-assign": ["error", "always"],
+        "no-console": "off",
+        "no-undef":"off"
+    }
+}
