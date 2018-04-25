@@ -120,7 +120,7 @@ if (typeof (Storage) !== "undefined") {
 
 // Initialize and load the ring sound
 clock.ring = document.createElement("audio");
-clock.ring.setAttribute("src", "sound/bell-ringing-01.mp3");
+clock.ring.setAttribute("src", "sound/bell-ringing-02.mp3");
 
 // Configure message listener
 var msgListener = function (message, sender, sendResponse) {
