@@ -1,32 +1,38 @@
+:root {
+  --main-bg-color: #F7F7F7;
+  --main-color: #293E40;
+  --btn-color: var(--main-color);
+  --btn-hover-color:#81B5A1;
+}
 body {
-    font-family: 'Tahoma', sans-serif !important;
-    color: #fff;
-    background-color: #252827;
-    width:250px
+    font-family: 'Helvetica', sans-serif !important;
+    color: var(--main-color);
+    background-color: var(--main-bg-color);
+    width:270px;
   }
   div {
-    padding: 10px;
+    padding: 6px;
   }
   input[type=range], select {
       width: 100%;
       padding: 12px 20px;
       margin: 8px 0;
       display: inline-block;
-      border: 1px solid #252827;
+      border: 1px solid var(--main-color);
       box-sizing: border-box;
   }
   button {
       width: 100%;
-      background-color: #4CAF50;
+      background-color: var(--btn-color);
       color: white;
-      padding: 14px 20px;
-      margin: 6px 0;
+      padding: 12px 20px;
+      margin: 4px 0;
       border: none;
       border-radius: 4px;
       cursor: pointer;
   }
   button:hover {
-      background-color: #45a049;
+      background-color: var(--btn-hover-color);
   }
   #timeCounter {
     text-align: center;
@@ -41,25 +47,20 @@ body {
   #container {
     margin: auto;
   }
-  #face {
-      stroke-width: 2px;
+  #clockFace {
+    stroke-width: 2px;
     stroke: #fff; 
   }
   #clockHandSeconds { 
-      stroke-width: 1px; 
-    stroke: #f55; 
+    stroke-width: 1px; 
+    stroke: var(--btn-hover-color); 
   }
   #clockHandMinutes { 
-      stroke-width: 1px; 
+    stroke-width: 1px; 
     stroke: #fff; 
   }
-  #clockOnABreak {
-    fill:  #2ecc71; 
-    color: #fff;
-    display: none;
-  }
   .mark {
-      stroke-width: 1px; 
+    stroke-width: 1px; 
     stroke: #fff;   
   }
   

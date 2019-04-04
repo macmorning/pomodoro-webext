@@ -15,7 +15,7 @@ const clock = {
         chrome.runtime.sendMessage({"command": "start", "streakTimer": this.streakTimer, "pauseTimer": this.pauseTimer}, this.getCurrentState);
     },
     getCurrentState: function () {
-        var responseHandler = function (response) {
+        var responseHandler = (response) => {
             clock.seconds = response.seconds;
             clock.onABreak = response.onABreak;
             clock.ticking = response.ticking;
@@ -44,7 +44,6 @@ const clock = {
             this.seconds--;
         } else {
             this.onABreak = !this.onABreak;
-            document.querySelector("#clockOnABreak").style.display = (clock.onABreak ? "block" : "none");
             minutes = document.querySelector((clock.onABreak ? "#pauseTimer" : "#streakTimer")).value;
             this.seconds = minutes * 60;
         }
@@ -55,22 +54,20 @@ const clock = {
 
 window.onload = function () {
     clock.getCurrentState();
-
-    document.querySelector("#streakTimer").oninput = function (evt) {
+    document.querySelector("#streakTimer").oninput = (evt) => {
         clock.streakTimer = evt.target.value;
         document.querySelector("#streakTimer_value").innerHTML = evt.target.value;
     };
-    document.querySelector("#pauseTimer").oninput = function (evt) {
+    document.querySelector("#pauseTimer").oninput = (evt) => {
         clock.pauseTimer = evt.target.value;
         document.querySelector("#pauseTimer_value").innerHTML = evt.target.value;
     };
 
     document.querySelector("#streakTimer").dispatchEvent(new Event("input"));
     document.querySelector("#pauseTimer").dispatchEvent(new Event("input"));
-    document.querySelector("#startBtn").onclick = function () { if (!clock.ticking) { clock.start(); } else { clock.reset(); } };
-    // document.querySelector("#container").onclick = function () { clock.pause(); };
+    document.querySelector("#startBtn").onclick = () => { if (!clock.ticking) { clock.start(); } else { clock.reset(); } };
 
-    setInterval(function () {
+    setInterval(() => {
         clock.tick();
     }, 1000);
 };
