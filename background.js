@@ -5,9 +5,10 @@ const clock = {
     onABreak: false,
     ticking: false,
     paused: false,
-    streakTimer: 0,
-    pauseTimer: 0,
+    streakTimer: 30,
+    pauseTimer: 5,
     ring: {},
+    volume: 100,
     start: () => {
         clock.ticking = true;
         clock.timeStarted = Date.now();
@@ -52,12 +53,22 @@ const clock = {
             "pauseTimer": clock.pauseTimer
         };
     },
+    loadOptions: () => {
+        console.log("loading options > ");
+        console.log(localStorage);
+        clock.volume = localStorage.volume;
+        if (clock.volume === undefined) {
+            clock.volume = 100;
+        }
+    },
     alarm: (alarm) => {
+        clock.loadOptions();
         if (!clock.ticking || clock.paused) {
             return true;
         }
         clock.onABreak = !clock.onABreak;
         try {
+            clock.ring.volume = clock.volume / 100;
             clock.ring.play();
         } catch (e) {
             console.log("could not ring: " + e);
@@ -103,9 +114,12 @@ if (typeof (Storage) !== "undefined") {
 clock.ring = document.createElement("audio");
 clock.ring.setAttribute("src", "sound/bell-ringing-02.mp3");
 
-// Configure message listener
+/**
+ * Message listener
+ * @param {Object} message message received
+ */
 const msgListener = (message, sender, sendResponse) => {
-    console.log("received message from content script: " + JSON.stringify(message));
+    console.log("received message from browser action: " + JSON.stringify(message));
     if (message.command === "getCurrentState") {
         console.log("sending response: " + JSON.stringify(clock.getCurrentState()));
         sendResponse(clock.getCurrentState());
@@ -127,3 +141,5 @@ const msgListener = (message, sender, sendResponse) => {
 
 chrome.runtime.onMessage.addListener(msgListener);
 chrome.alarms.onAlarm.addListener(clock.alarm);
+chrome.storage.onChanged.addListener(clock.loadOptions);
+clock.loadOptions();

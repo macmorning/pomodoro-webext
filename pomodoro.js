@@ -5,17 +5,20 @@ const clock = {
     paused: false,
     streakTimer: 0,
     pauseTimer: 0,
-    pause: function () {
-        chrome.runtime.sendMessage({"command": "pause"}, this.getCurrentState);
+    pause: () => {
+        chrome.runtime.sendMessage({"command": "pause"}, clock.getCurrentState);
     },
-    reset: function () {
-        chrome.runtime.sendMessage({"command": "reset", "streakTimer": this.streakTimer, "pauseTimer": this.pauseTimer}, this.getCurrentState);
+    reset: () => {
+        chrome.runtime.sendMessage({"command": "reset", "streakTimer": clock.streakTimer, "pauseTimer": clock.pauseTimer}, clock.getCurrentState);
     },
-    start: function () {
-        chrome.runtime.sendMessage({"command": "start", "streakTimer": this.streakTimer, "pauseTimer": this.pauseTimer}, this.getCurrentState);
+    start: () => {
+        console.log({"command": "start", "streakTimer": clock.streakTimer, "pauseTimer": clock.pauseTimer});
+        chrome.runtime.sendMessage({"command": "start", "streakTimer": clock.streakTimer, "pauseTimer": clock.pauseTimer}, clock.getCurrentState);
     },
-    getCurrentState: function () {
+    getCurrentState: () => {
         var responseHandler = (response) => {
+            console.log(response.streakTimer);
+            console.log(response.pauseTimer);
             clock.seconds = response.seconds;
             clock.onABreak = response.onABreak;
             clock.ticking = response.ticking;
@@ -26,46 +29,53 @@ const clock = {
         };
         chrome.runtime.sendMessage({"command": "getCurrentState"}, responseHandler);
     },
-    update: function () {
-        document.querySelector("#clockHandSeconds").setAttribute("transform", "rotate(" + 6 * clock.seconds + " 50 50)");
-        document.querySelector("#clockHandMinutes").setAttribute("transform", "rotate(" + clock.seconds / 10 + " 50 50)");
-        document.querySelector("#streakTimer").value = clock.streakTimer;
-        document.querySelector("#streakTimer").dispatchEvent(new Event("input"));
-        document.querySelector("#pauseTimer").value = clock.pauseTimer;
-        document.querySelector("#pauseTimer").dispatchEvent(new Event("input"));
-        document.querySelector("#timeCounter").innerHTML = Math.floor(clock.seconds / 60).toString().padStart(2, "0") + ":" + Math.floor(clock.seconds % 60).toString().padStart(2, "0");
-        document.querySelector("#startBtn").innerHTML = (clock.ticking ? "Reset" : "Start!");
+    update: () => {
+        document.getElementById("clockHandSeconds").setAttribute("transform", "rotate(" + 6 * clock.seconds + " 50 50)");
+        document.getElementById("clockHandMinutes").setAttribute("transform", "rotate(" + clock.seconds / 10 + " 50 50)");
+        document.getElementById("streakTimer").value = clock.streakTimer;
+        document.getElementById("streakTimer").dispatchEvent(new Event("input"));
+        document.getElementById("pauseTimer").value = clock.pauseTimer;
+        document.getElementById("pauseTimer").dispatchEvent(new Event("input"));
+        document.getElementById("timeCounter").innerHTML = Math.floor(clock.seconds / 60).toString().padStart(2, "0") + ":" + Math.floor(clock.seconds % 60).toString().padStart(2, "0");
+        document.getElementById("startBtn").innerHTML = (clock.ticking ? "Reset" : "Start!");
     },
-    tick: function () {
-        if (!this.ticking || this.paused) {
+    tick: () => {
+        if (!clock.ticking || clock.paused) {
             return true;
         }
-        if (this.seconds > 0) {
-            this.seconds--;
+        if (clock.seconds > 0) {
+            clock.seconds--;
         } else {
-            this.onABreak = !this.onABreak;
-            minutes = document.querySelector((clock.onABreak ? "#pauseTimer" : "#streakTimer")).value;
-            this.seconds = minutes * 60;
+            clock.onABreak = !clock.onABreak;
+            minutes = document.getElementById((clock.onABreak ? "pauseTimer" : "streakTimer")).value;
+            clock.seconds = minutes * 60;
         }
-        this.update();
+        clock.update();
         return true;
+    },
+    openOptions: () => {
+        if (chrome.runtime.openOptionsPage) {
+            chrome.runtime.openOptionsPage();
+        } else {
+            window.open(chrome.runtime.getURL("options.html"));
+        }
     }
 };
 
-window.onload = function () {
+window.onload = () => {
     clock.getCurrentState();
-    document.querySelector("#streakTimer").oninput = (evt) => {
+    document.getElementById("streakTimer").oninput = (evt) => {
         clock.streakTimer = evt.target.value;
-        document.querySelector("#streakTimer_value").innerHTML = evt.target.value;
+        document.getElementById("streakTimer_value").innerHTML = evt.target.value;
     };
-    document.querySelector("#pauseTimer").oninput = (evt) => {
+    document.getElementById("pauseTimer").oninput = (evt) => {
         clock.pauseTimer = evt.target.value;
-        document.querySelector("#pauseTimer_value").innerHTML = evt.target.value;
+        document.getElementById("pauseTimer_value").innerHTML = evt.target.value;
     };
-
-    document.querySelector("#streakTimer").dispatchEvent(new Event("input"));
-    document.querySelector("#pauseTimer").dispatchEvent(new Event("input"));
-    document.querySelector("#startBtn").onclick = () => { if (!clock.ticking) { clock.start(); } else { clock.reset(); } };
+    document.getElementById("config").addEventListener("click", clock.openOptions);
+    document.getElementById("streakTimer").dispatchEvent(new Event("input"));
+    document.getElementById("pauseTimer").dispatchEvent(new Event("input"));
+    document.getElementById("startBtn").onclick = () => { if (!clock.ticking) { clock.start(); } else { clock.reset(); } };
 
     setInterval(() => {
         clock.tick();

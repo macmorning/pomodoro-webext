@@ -9,58 +9,69 @@ body {
     color: var(--main-color);
     background-color: var(--main-bg-color);
     width:270px;
-  }
-  div {
-    padding: 6px;
-  }
-  input[type=range], select {
-      width: 100%;
-      padding: 12px 20px;
-      margin: 8px 0;
-      display: inline-block;
-      border: 1px solid var(--main-color);
-      box-sizing: border-box;
-  }
-  button {
-      width: 100%;
-      background-color: var(--btn-color);
-      color: white;
-      padding: 12px 20px;
-      margin: 4px 0;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-  }
-  button:hover {
-      background-color: var(--btn-hover-color);
-  }
-  #timeCounter {
-    text-align: center;
-    font-size: 3em;
-  }
-  #pageDiv{
-    min-width:350px;
-    max-width:700px;
-    position:relative;
-    margin:auto;
-  }
-  #container {
-    margin: auto;
-  }
-  #clockFace {
-    stroke-width: 2px;
-    stroke: #fff; 
-  }
-  #clockHandSeconds { 
-    stroke-width: 1px; 
-    stroke: var(--btn-hover-color); 
-  }
-  #clockHandMinutes { 
-    stroke-width: 1px; 
-    stroke: #fff; 
-  }
-  .mark {
-    stroke-width: 1px; 
-    stroke: #fff;   
-  }
-  
+}
+div {
+  padding: 6px;
+}
+div.top-commands {
+  position: absolute;
+  font-size: 25px;
+  height: 15px;
+  width: 15px;
+  cursor: pointer;
+  color: var(--main-color);
+}
+div#config {
+  top: 10px; 
+  right: 30px;
+}
+input[type=range], select {
+    width: 100%;
+    padding: 12px 20px;
+    margin: 8px 0;
+    display: inline-block;
+    border: 1px solid var(--main-color);
+    box-sizing: border-box;
+}
+button {
+    width: 100%;
+    background-color: var(--btn-color);
+    color: white;
+    padding: 12px 20px;
+    margin: 4px 0;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+button:hover {
+    background-color: var(--btn-hover-color);
+}
+#timeCounter {
+  text-align: center;
+  font-size: 3em;
+}
+#pageDiv{
+  min-width:350px;
+  max-width:700px;
+  position:relative;
+  margin:auto;
+}
+#container {
+  margin: auto;
+}
+#clockFace {
+  stroke-width: 2px;
+  stroke: #fff; 
+}
+#clockHandSeconds { 
+  stroke-width: 1px; 
+  stroke: var(--btn-hover-color); 
+}
+#clockHandMinutes { 
+  stroke-width: 1px; 
+  stroke: #fff; 
+}
+.mark {
+  stroke-width: 1px; 
+  stroke: #fff;   
+}
