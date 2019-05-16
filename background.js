@@ -16,7 +16,8 @@ const clock = {
         clock.paused = false;
         clock.seconds = clock.streakTimer * 60;
         clock.onABreak = false;
-        chrome.browserAction.setIcon({path: "icons/clock_red-48.png"});
+        chrome.browserAction.setBadgeText({"text": " "});
+        chrome.browserAction.setBadgeBackgroundColor({"color":"red"});
         chrome.browserAction.setTitle({title: "on a streak"});
         chrome.alarms.create("alarm", { "delayInMinutes": parseInt(clock.streakTimer) });
         if (typeof (Storage) !== "undefined") {
@@ -29,7 +30,8 @@ const clock = {
         clock.paused = false;
         clock.seconds = clock.streakTimer * 60;
         clock.onABreak = false;
-        chrome.browserAction.setIcon({path: "icons/clock-48.png"});
+        chrome.browserAction.setBadgeText({"text": ""});
+        chrome.browserAction.setBadgeBackgroundColor({"color":"red"});
         chrome.browserAction.setTitle({title: "not ticking"});
         chrome.alarms.clear("alarm");
         if (typeof (Storage) !== "undefined") {
@@ -80,7 +82,8 @@ const clock = {
         clock.alarmAt = clock.timeStarted + (clock.seconds * 1000);
         chrome.alarms.clear("alarm");
         chrome.alarms.create("alarm", { "delayInMinutes": parseInt(minutes) });
-        chrome.browserAction.setIcon({path: (clock.onABreak ? "icons/clock_green-48.png" : "icons/clock_red-48.png")});
+        chrome.browserAction.setBadgeText({"text": " "});
+        chrome.browserAction.setBadgeBackgroundColor({"color":(clock.onABreak ? "green" : "red")});
         chrome.browserAction.setTitle({title: "on a " + (clock.onABreak ? "break" : "streak")});
 
         try {
