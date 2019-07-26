@@ -10,8 +10,16 @@ body {
     background-color: var(--main-bg-color);
     width:270px;
 }
+a {
+  color: var(--main-color);
+  text-decoration: none;
+}
+
 div {
   padding: 6px;
+}
+form {
+  width: 550px;
 }
 div.top-commands {
   position: absolute;
@@ -22,8 +30,16 @@ div.top-commands {
   color: var(--main-color);
 }
 div#config {
-  top: 10px; 
-  right: 30px;
+  top: 5px; 
+  right: 10px;
+}
+.option-label, .option-input {
+  margin-left: 5px;
+  display: inline-block;
+  line-height: 30px;
+  font-size: large;
+  color: var(--main-color);
+  cursor: pointer;
 }
 input[type=range], select {
     width: 100%;
@@ -34,14 +50,21 @@ input[type=range], select {
     box-sizing: border-box;
 }
 button {
-    width: 100%;
-    background-color: var(--btn-color);
-    color: white;
-    padding: 12px 20px;
-    margin: 4px 0;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
+  width: 100%;
+  background-color: var(--btn-color);
+  color: var(--main-bg-color);
+  padding: 14px 20px;
+  margin: 6px 0;
+  border: 1px var(--main-color) solid;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: larger;
+  font-weight: bold;
+}
+
+button.options  {
+  height: 29px;
+  padding: 0 10px;
 }
 button:hover {
     background-color: var(--btn-hover-color);
