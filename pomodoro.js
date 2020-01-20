@@ -15,6 +15,10 @@ const clock = {
         console.log({"command": "start", "streakTimer": clock.streakTimer, "pauseTimer": clock.pauseTimer});
         chrome.runtime.sendMessage({"command": "start", "streakTimer": clock.streakTimer, "pauseTimer": clock.pauseTimer}, clock.getCurrentState);
     },
+    skip: () => {
+        console.log({"command": "skip", "streakTimer": clock.streakTimer, "pauseTimer": clock.pauseTimer});
+        chrome.runtime.sendMessage({"command": "skip", "streakTimer": clock.streakTimer, "pauseTimer": clock.pauseTimer}, clock.getCurrentState);
+    },
     getCurrentState: () => {
         var responseHandler = (response) => {
             console.log(response.streakTimer);
@@ -38,6 +42,11 @@ const clock = {
         document.getElementById("pauseTimer").dispatchEvent(new Event("input"));
         document.getElementById("timeCounter").innerHTML = Math.floor(clock.seconds / 60).toString().padStart(2, "0") + ":" + Math.floor(clock.seconds % 60).toString().padStart(2, "0");
         document.getElementById("startBtn").innerHTML = (clock.ticking ? "Reset" : "Start!");
+        if(clock.ticking) {
+            document.getElementById("skipBtn").removeAttribute("disabled");
+        } else {
+            document.getElementById("skipBtn").setAttribute("disabled","disabled");
+        }
     },
     tick: () => {
         if (!clock.ticking || clock.paused) {
@@ -76,6 +85,7 @@ window.onload = () => {
     document.getElementById("streakTimer").dispatchEvent(new Event("input"));
     document.getElementById("pauseTimer").dispatchEvent(new Event("input"));
     document.getElementById("startBtn").onclick = () => { if (!clock.ticking) { clock.start(); } else { clock.reset(); } };
+    document.getElementById("skipBtn").onclick = () => { if (clock.ticking) { clock.skip(); } };
 
     setInterval(() => {
         clock.tick();

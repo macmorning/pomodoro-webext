@@ -8,30 +8,29 @@ body {
     font-family: 'Helvetica', sans-serif !important;
     color: var(--main-color);
     background-color: var(--main-bg-color);
-    width:270px;
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 a {
   color: var(--main-color);
   text-decoration: none;
 }
-
-div {
-  padding: 6px;
+div#container {
+  width: 270px;
 }
-form {
-  width: 550px;
+form#options-form {
+    margin: auto;
+    width: 95%;
+    min-width: 550px;
 }
-div.top-commands {
-  position: absolute;
-  font-size: 25px;
-  height: 15px;
-  width: 15px;
-  cursor: pointer;
-  color: var(--main-color);
+img.top-commands {
+    position: absolute;
+    width: 25px;
+    cursor: pointer;
+    top: 15px; 
 }
-div#config {
-  top: 5px; 
-  right: 10px;
+img#config {
+    right: 7px;
 }
 .option-label, .option-input {
   margin-left: 5px;
@@ -42,9 +41,9 @@ div#config {
   cursor: pointer;
 }
 input[type=range], select {
-    width: 100%;
-    padding: 12px 20px;
-    margin: 8px 0;
+    width: 98%;
+    padding: 10px 18px;
+    margin: 3px 0;
     display: inline-block;
     border: 1px solid var(--main-color);
     box-sizing: border-box;
@@ -53,8 +52,8 @@ button {
   width: 100%;
   background-color: var(--btn-color);
   color: var(--main-bg-color);
-  padding: 14px 20px;
-  margin: 6px 0;
+  padding: 7px 10px;
+  margin: 3px 0;
   border: 1px var(--main-color) solid;
   border-radius: 4px;
   cursor: pointer;

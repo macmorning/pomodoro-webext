@@ -13,11 +13,11 @@ const clock = {
         clock.ticking = true;
         clock.timeStarted = Date.now();
         clock.alarmAt = clock.timeStarted + (clock.streakTimer * 60000);
-        clock.paused = false;
+        clock.paused =  false;
         clock.seconds = clock.streakTimer * 60;
         clock.onABreak = false;
         chrome.browserAction.setBadgeText({"text": " "});
-        chrome.browserAction.setBadgeBackgroundColor({"color":"red"});
+        chrome.browserAction.setBadgeBackgroundColor({"color": "red"});
         chrome.browserAction.setTitle({title: "on a streak"});
         chrome.alarms.create("alarm", { "delayInMinutes": parseInt(clock.streakTimer) });
         if (typeof (Storage) !== "undefined") {
@@ -130,6 +130,9 @@ const msgListener = (message, sender, sendResponse) => {
         clock.streakTimer = message.streakTimer;
         clock.pauseTimer = message.pauseTimer;
         clock.start();
+        sendResponse(true);
+    } else if (message.command === "skip") {
+        clock.alarm();
         sendResponse(true);
     } else if (message.command === "reset") {
         clock.streakTimer = message.streakTimer;
