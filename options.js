@@ -1,5 +1,6 @@
 const context = {
-    volume: 100
+    volume: 100,
+    showMinutes: false
 };
 
 /**
@@ -12,15 +13,6 @@ const displayMessage = (txt) => {
 };
 
 /**
- * Updates field value from context object
- * @param {string} field the name of the field that needs to be updated
- */
-const updateField = (field) => {
-    document.getElementById(field + "_value").innerHTML = context[field];
-    document.getElementById(field).value = context[field];
-};
-
-/**
  * Restores the options saved into local storage
  */
 const restoreOptions = () => {
@@ -28,7 +20,11 @@ const restoreOptions = () => {
     if (context.volume === undefined) {
         context.volume = 100;
     }
-    updateField("volume");
+    document.getElementById("volume_value").innerHTML = context["volume"];
+    document.getElementById("volume").value = context["volume"];
+
+    context.showMinutes = (localStorage.showMinutes === true || localStorage.showMinutes === "true" || localStorage.showMinutes === undefined);
+    document.getElementById("showMinutes").checked = context.showMinutes;
 
     document.getElementById("volume").oninput = (evt) => {
         context.volume = evt.target.value;
@@ -54,6 +50,7 @@ const saveOptions = (evt) => {
     evt.preventDefault();
     try {
         localStorage.volume = context.volume;
+        localStorage.showMinutes = document.getElementById("showMinutes").checked;
         displayMessage("Options saved");
     } catch (e) {
         displayMessage("Options could not be saved. Is storage enabled?");
