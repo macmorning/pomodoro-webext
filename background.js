@@ -65,16 +65,16 @@ const clock = {
         };
     },
     loadOptions: () => {
-        console.log("loading options > ");
-        console.log(localStorage);
+        console.log("loading options");
         clock.volume = localStorage.volume;
         if (clock.volume === undefined) {
             clock.volume = 100;
         }
         clock.showMinutes = (localStorage.showMinutes === true || localStorage.showMinutes === "true" || localStorage.showMinutes === undefined);
+        clock.customSoundData = localStorage.customSoundData || "";
+        clock.customSound = (clock.customSoundData !== "" && (localStorage.customSound === true || localStorage.customSound === "true"));
     },
     alarm: (alarm) => {
-        console.warn(alarm);
         clock.loadOptions();
         if (!clock.ticking || clock.paused) {
             return true;
@@ -86,8 +86,16 @@ const clock = {
         } else if (!alarm || alarm.name !== "minutes") {
             clock.onABreak = !clock.onABreak;
             try {
+                if (clock.customSound) {
+                    clock.ring.setAttribute("src", clock.customSoundData);
+                } else {
+                    clock.ring.setAttribute("src", "sound/bell-ringing-02.mp3");
+                }
                 clock.ring.volume = clock.volume / 100;
                 clock.ring.play();
+                window.setTimeout(() => {
+                    clock.ring.pause();
+                }, 5000);
             } catch (e) {
                 console.warn("could not ring: " + e);
             }
@@ -144,9 +152,6 @@ if (typeof (Storage) !== "undefined") {
     }
 }
 
-// Initialize and load the ring sound
-clock.ring = document.createElement("audio");
-clock.ring.setAttribute("src", "sound/bell-ringing-02.mp3");
 
 /**
  * Message listener
@@ -180,6 +185,9 @@ const msgListener = (message, sender, sendResponse) => {
         sendResponse(true);
     }
 };
+
+// Initialize and load the ring sound
+clock.ring = document.createElement("audio");
 
 chrome.runtime.onMessage.addListener(msgListener);
 chrome.alarms.onAlarm.addListener(clock.alarm);
