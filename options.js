@@ -1,6 +1,8 @@
 const context = {
     volume: 100,
-    showMinutes: false
+    showMinutes: false,
+    customSoundData: "",
+    customSoundFilename: ""
 };
 
 /**
@@ -26,18 +28,59 @@ const restoreOptions = () => {
     context.showMinutes = (localStorage.showMinutes === true || localStorage.showMinutes === "true" || localStorage.showMinutes === undefined);
     document.getElementById("showMinutes").checked = context.showMinutes;
 
+    let customSoundElt = document.getElementById("customSound");
+    let soundFileElt = document.getElementById("soundFile");
+
+    document.getElementById("customSound").onchange = (evt) => {
+        context.customSound = customSoundElt.checked;
+        if (customSoundElt.checked) {
+            soundFileElt.style.visibility = "visible";
+        } else {
+            soundFileElt.style.visibility = "hidden";
+        }
+    };
+    context.customSound = (localStorage.customSound === true || localStorage.customSound === "true");
+    customSoundElt.checked = context.customSound;
+    customSoundElt.onchange();
+    context.customSoundData = localStorage.customSoundData || "";
+
+    soundFileElt.onchange = () => {
+        context.customSoundFilename = soundFileElt.value.split(/(\\|\/)/g).pop();
+        document.getElementById("customSoundFilename").innerText = "";
+        const file = soundFileElt.files[0];
+        const reader = new FileReader();
+        reader.addEventListener("load", function () {
+            context.customSoundData = reader.result;
+        }, false);
+        if (file) {
+            reader.readAsDataURL(file);
+        }
+    }
+
+    context.customSoundFilename = (localStorage.customSoundFilename || "");
+    if (context.customSoundFilename !== "") {
+        document.getElementById("customSoundFilename").innerText = " (current: " + context.customSoundFilename + ")";
+    }
+
+
     document.getElementById("volume").oninput = (evt) => {
         context.volume = evt.target.value;
         updateField("volume");
     };
 
     document.getElementById("volume_test").onclick = (evt) => {
-        if (context.ring === undefined) {
-            context.ring = document.createElement("audio");
+        context.ring = document.createElement("audio");
+        console.log((context.customSound && context.customSoundData));
+        if (context.customSound && context.customSoundData) {
+            context.ring.setAttribute("src", context.customSoundData);
+        } else {
             context.ring.setAttribute("src", "sound/bell-ringing-02.mp3");
         }
         context.ring.volume = context.volume / 100;
         context.ring.play();
+        window.setTimeout(() => {
+            context.ring.pause();
+        }, 5000);
     };
     document.querySelector("form").addEventListener("submit", saveOptions);
 };
@@ -51,7 +94,14 @@ const saveOptions = (evt) => {
     try {
         localStorage.volume = context.volume;
         localStorage.showMinutes = document.getElementById("showMinutes").checked;
-        displayMessage("Options saved");
+        localStorage.customSound = document.getElementById("customSound").checked;
+        if (!document.getElementById("customSound").checked) {
+            context.customSoundData = "";
+            context.customSoundFilename = "";
+        }
+        localStorage.customSoundData = context.customSoundData;
+        localStorage.customSoundFilename = context.customSoundFilename;
+        window.location.reload(true);
     } catch (e) {
         displayMessage("Options could not be saved. Is storage enabled?");
         console.log(e);
