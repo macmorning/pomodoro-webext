@@ -21,8 +21,6 @@ const clock = {
     },
     getCurrentState: () => {
         var responseHandler = (response) => {
-            console.log(response.streakTimer);
-            console.log(response.pauseTimer);
             clock.seconds = response.seconds;
             clock.onABreak = response.onABreak;
             clock.ticking = response.ticking;
@@ -86,6 +84,7 @@ window.onload = () => {
     document.getElementById("pauseTimer").dispatchEvent(new Event("input"));
     document.getElementById("startBtn").onclick = () => { if (!clock.ticking) { clock.start(); } else { clock.reset(); } };
     document.getElementById("skipBtn").onclick = () => { if (clock.ticking) { clock.skip(); } };
+    document.getElementById("clockContainer").onclick = function() { clock.pause(); };
 
     setInterval(() => {
         clock.tick();
