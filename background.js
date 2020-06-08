@@ -38,6 +38,7 @@ const clock = {
         }
         chrome.browserAction.setBadgeBackgroundColor({"color": color});
         chrome.browserAction.setTitle({title: title});
+        return true;
     },
     start: () => {
         clock.ticking = true;
@@ -50,6 +51,7 @@ const clock = {
         chrome.alarms.create("alarm", { "delayInMinutes": parseInt(clock.streakTimer) });
         chrome.alarms.clear("minutes");
         chrome.alarms.create("minutes", { "delayInMinutes": 1, "periodInMinutes": 1 });
+        return true;
     },
     reset: () => {
         clock.ticking = false;
@@ -61,8 +63,10 @@ const clock = {
         chrome.browserAction.setTitle({title: "not ticking"});
         chrome.alarms.clear("alarm");
         chrome.alarms.clear("minutes");
+        return true;
     },
     pause: () => {
+        if (!clock.ticking) { return false; }
         clock.paused = !clock.paused;
         if (clock.paused) {
             clock.seconds = Math.floor((clock.alarmAt - Date.now()) / 1000);
@@ -74,6 +78,7 @@ const clock = {
             chrome.alarms.create("minutes", { "delayInMinutes": 1, "periodInMinutes": 1 });
         }
         clock.updateBadge(Math.round(clock.seconds / 60));
+        return true;
     },
     getCurrentState: () => {
         if (clock.ticking && !clock.paused) {
