@@ -7,9 +7,39 @@ const clock = {
     paused: false,
     streakTimer: 30,
     pauseTimer: 5,
+    paused: false,
     ring: {},
     volume: 100,
     showMinutes: false,
+    updateBadge: (minutes) => {
+        let color, text;
+        if (clock.paused) {
+            color = "LightSkyBlue";
+            title = "paused";
+        } else if (clock.onABreak) {
+            color = "green";
+            title = "on a break";
+        } else {
+            color = "red";
+            title = "on a streak";
+        }
+        if (!clock.showMinutes) {
+            try {
+                chrome.browserAction.setBadgeText({"text": "0"});
+                chrome.browserAction.setBadgeTextColor({"color": color});
+            } catch(e) {
+                chrome.browserAction.setBadgeText({"text": " "});
+            }
+        } else {
+            chrome.browserAction.setBadgeText({"text": minutes.toString()});
+            try {
+                chrome.browserAction.setBadgeTextColor({"color":"white"});
+            } catch(e) {}
+        }
+        chrome.browserAction.setBadgeBackgroundColor({"color": color});
+        chrome.browserAction.setTitle({title: title});
+        return true;
+    },
     start: () => {
         clock.ticking = true;
         clock.timeStarted = Date.now();
@@ -17,25 +47,11 @@ const clock = {
         clock.paused =  false;
         clock.seconds = clock.streakTimer * 60;
         clock.onABreak = false;
-        if (!clock.showMinutes) {
-            try {
-                // setBadgeTextColor is not supproted in Chromium
-                chrome.browserAction.setBadgeTextColor({"color": "red"});
-                chrome.browserAction.setBadgeText({"text": "0"});
-            } catch(e) {
-                chrome.browserAction.setBadgeText({"text": " "});
-            }
-        } else {
-            chrome.browserAction.setBadgeText({"text": clock.streakTimer.toString()});
-            try {
-                chrome.browserAction.setBadgeTextColor({"color": "white"});
-            } catch(e) {}
-            chrome.alarms.clear("minutes");
-            chrome.alarms.create("minutes", { "delayInMinutes": 1, "periodInMinutes": 1 });
-        }
-        chrome.browserAction.setBadgeBackgroundColor({"color": "red"});
-        chrome.browserAction.setTitle({title: "on a streak"});
+        clock.updateBadge(clock.streakTimer);
         chrome.alarms.create("alarm", { "delayInMinutes": parseInt(clock.streakTimer) });
+        chrome.alarms.clear("minutes");
+        chrome.alarms.create("minutes", { "delayInMinutes": 1, "periodInMinutes": 1 });
+        return true;
     },
     reset: () => {
         clock.ticking = false;
@@ -47,16 +63,30 @@ const clock = {
         chrome.browserAction.setTitle({title: "not ticking"});
         chrome.alarms.clear("alarm");
         chrome.alarms.clear("minutes");
+        return true;
     },
     pause: () => {
+        if (!clock.ticking) { return false; }
         clock.paused = !clock.paused;
+        if (clock.paused) {
+            clock.seconds = Math.floor((clock.alarmAt - Date.now()) / 1000);
+            chrome.alarms.clear("alarm");
+            chrome.alarms.clear("minutes");
+        } if (!clock.paused) {
+            clock.alarmAt = Date.now() + (clock.seconds * 1000);
+            chrome.alarms.create("alarm", { "delayInMinutes": clock.seconds*60 });
+            chrome.alarms.create("minutes", { "delayInMinutes": 1, "periodInMinutes": 1 });
+        }
+        clock.updateBadge(Math.round(clock.seconds / 60));
+        return true;
     },
     getCurrentState: () => {
-        if (clock.ticking) {
+        if (clock.ticking && !clock.paused) {
             clock.seconds = Math.floor((clock.alarmAt - Date.now()) / 1000);
         }
         return {
             "seconds": clock.seconds,
+            "paused": clock.paused,
             "onABreak": clock.onABreak,
             "ticking": clock.ticking,
             "paused": clock.paused,
@@ -81,7 +111,8 @@ const clock = {
         }
 
         if (alarm && alarm.name === "minutes" && clock.showMinutes) {
-            let remaining = Math.round(Math.floor((clock.alarmAt - Date.now()) / 1000) / 60);
+            clock.seconds = Math.floor((clock.alarmAt - Date.now()) / 1000);
+            let remaining = Math.round(clock.seconds / 60);
             chrome.browserAction.setBadgeText({"text": remaining.toString()});
         } else if (!alarm || alarm.name !== "minutes") {
             clock.onABreak = !clock.onABreak;
@@ -104,25 +135,11 @@ const clock = {
             clock.seconds = minutes * 60;
             clock.timeStarted = Date.now();
             clock.alarmAt = clock.timeStarted + (clock.seconds * 1000);
+            clock.updateBadge(minutes);
             chrome.alarms.clear("alarm");
             chrome.alarms.create("alarm", { "delayInMinutes": parseInt(minutes) });
-            if (!clock.showMinutes) {
-                try {
-                    chrome.browserAction.setBadgeText({"text": "0"});
-                    chrome.browserAction.setBadgeTextColor({"color":(clock.onABreak ? "green" : "red")});
-                } catch(e) {
-                    chrome.browserAction.setBadgeText({"text": " "});
-                }
-            } else {
-                chrome.alarms.clear("minutes");
-                chrome.alarms.create("minutes", { "delayInMinutes": 1, "periodInMinutes": 1 });    
-                chrome.browserAction.setBadgeText({"text": minutes.toString()});
-                try {
-                    chrome.browserAction.setBadgeTextColor({"color":"white"});
-                } catch(e) {}
-            }
-            chrome.browserAction.setBadgeBackgroundColor({"color":(clock.onABreak ? "green" : "red")});
-            chrome.browserAction.setTitle({title: "on a " + (clock.onABreak ? "break" : "streak")});
+            chrome.alarms.clear("minutes");
+            chrome.alarms.create("minutes", { "delayInMinutes": 1, "periodInMinutes": 1 });
     
             try {
                 let text = (clock.onABreak ? "Time for a " + minutes + " min break" : "Ready for a new " + minutes + " min streak?");
