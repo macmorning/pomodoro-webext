@@ -20,7 +20,7 @@ const clock = {
             color = "green";
             title = "on a break";
         } else {
-            color = "red";
+            color = "DarkRed";
             title = "on a streak";
         }
         if (!clock.showMinutes) {
