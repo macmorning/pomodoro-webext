@@ -82,6 +82,8 @@ const restoreOptions = () => {
             context.ring.pause();
         }, 5000);
     };
+    document.getElementById("exportStatsJSON").onclick = exportStatsJSON;
+    document.getElementById("exportStatsCSV").onclick = exportStatsCSV;
     document.querySelector("form").addEventListener("submit", saveOptions);
 };
 
@@ -106,6 +108,54 @@ const saveOptions = (evt) => {
         displayMessage("Options could not be saved. Is storage enabled?");
         console.log(e);
     }
+};
+
+/**
+ * Creates CSV lines from an array of objects
+ * @author https://medium.com/@danny.pule/export-json-to-csv-file-using-javascript-a0b7bc5b00d2
+ * @param {Array} objArray array of objects
+ */
+const convertToCSV = (objArray) => {
+    var array = typeof objArray != 'object' ? JSON.parse(objArray) : objArray;
+    var str = '';
+    for (var i = 0; i < array.length; i++) {
+        var line = '';
+        for (var index in array[i]) {
+            if (line != '') line += ','
+            line += array[i][index];
+        }
+        str += line + '\r\n';
+    }
+    return str;
+}
+
+const exportStatsJSON = (evt) => { evt.preventDefault(); exportStats("json"); };
+const exportStatsCSV = (evt) => { evt.preventDefault(); exportStats("csv"); };
+/**
+ * Exports statistics
+ * @param {object} evt the event that triggered the action
+ */
+const exportStats = (format) => {
+    if (!format) { format = "json"; }
+    let responseHandler = (response) => {
+        var blob;
+        if (format == "csv") {
+            blob = new Blob([convertToCSV(response)], {'type': "application/csv;charset=utf-8"});
+        } else {
+            blob = new Blob([JSON.stringify(response)], {'type': "application/json;charset=utf-8"});
+        }
+        try {
+            chrome.downloads.download({
+                filename: "pomodoro-data." + format,
+                saveAs: true,
+                url: URL.createObjectURL(blob)
+            });
+        } catch (e) {
+            displayMessage("Sorry, there was a browser error.", e);
+            console.log(e);
+        }
+    };
+    chrome.runtime.sendMessage({"command": "getStats"}, responseHandler);
 };
 
 document.addEventListener("DOMContentLoaded", restoreOptions);
