@@ -2,7 +2,7 @@
 
   "manifest_version": 2,
   "name": "Pomodoro clock",
-  "version": "2.1.2",
+  "version": "2.2.0",
   "description": "A simple pomodoro clock in your browser to hack your productivity.",
   "homepage_url": "https://github.com/macmorning/pomodoro-webext",
   "icons": {
@@ -19,5 +19,5 @@
     "default_icon": { "48": "icons/clock-48.png" },
     "default_popup": "pomodoro.html"
   },
-  "permissions": ["storage", "notifications", "alarms"]
+  "permissions": ["storage", "notifications", "alarms", "downloads"]
 }

@@ -20,7 +20,7 @@ const clock = {
         chrome.runtime.sendMessage({"command": "skip", "streakTimer": clock.streakTimer, "pauseTimer": clock.pauseTimer}, clock.getCurrentState);
     },
     getCurrentState: () => {
-        var responseHandler = (response) => {
+        let responseHandler = (response) => {
             clock.seconds = response.seconds;
             clock.onABreak = response.onABreak;
             clock.ticking = response.ticking;

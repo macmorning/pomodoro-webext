@@ -1,3 +1,77 @@
+const db = {
+    indexedDB: null,
+    addEvent: (eventName) => {
+        let eventObject = {
+            "eventDate": new Date().toISOString(),
+            "event": eventName.toString(),
+            "currentState": (clock && clock.onABreak ? "break" : "streak")
+        };
+        let records = [eventObject];
+
+        if (db.indexedDB) {
+            const insert_transaction = db.indexedDB.transaction("activity", "readwrite");
+            const objectStore = insert_transaction.objectStore("activity");
+            return new Promise((resolve, reject) => {
+                insert_transaction.oncomplete = function () {
+                    console.log("Insert done");
+                    resolve(true);
+                }
+                insert_transaction.onerror = function (e) {
+                    console.error("Problem inserting record");
+                    console.error(e);
+                    resolve(false);
+                }
+                records.forEach(record => {
+                    let request = objectStore.add(record);
+                    request.onsuccess = function () {
+                        console.log("Added: ", record);
+                    }
+                });
+            });
+        }
+    },
+    createDB: () => {
+        const request = window.indexedDB.open('stats');
+        request.onerror = function (event) {
+            console.log("Problem opening DB.");
+        }
+        request.onupgradeneeded = function (event) {
+            db.indexedDB = event.target.result;
+            let objectStore = db.indexedDB.createObjectStore('activity', {
+                keyPath: 'eventDate'
+            });
+            objectStore.transaction.oncomplete = function (event) {
+                console.log("ObjectStore Created.");
+            }
+        }
+        request.onsuccess = function (event) {
+            db.indexedDB = event.target.result;
+            console.log("DB opened");
+            db.addEvent("loaded");
+            db.indexedDB.onerror = (event) => {
+                console.error("Failed to open DB")
+            }
+        }
+    },
+    getStats: () => {
+        if (db.indexedDB) {
+            const read_transaction = db.indexedDB.transaction("activity", "readonly");
+            const objectStore = read_transaction.objectStore("activity");
+            return new Promise((resolve, reject) => {
+                read_transaction.oncomplete = function () {
+                    console.log("Get transaction complete");
+                }
+                read_transaction.onerror = function () {
+                    console.error("Problem getting records")
+                }
+                let request = objectStore.getAll();
+                request.onsuccess = function (event) {
+                    resolve(event.target.result);
+                }
+            });
+        }
+    }
+}
 const clock = {
     seconds: 0,
     timeStarted: 0,
@@ -51,6 +125,7 @@ const clock = {
         chrome.alarms.create("alarm", { "delayInMinutes": parseInt(clock.streakTimer) });
         chrome.alarms.clear("minutes");
         chrome.alarms.create("minutes", { "delayInMinutes": 1, "periodInMinutes": 1 });
+        db.addEvent("started");
         return true;
     },
     reset: () => {
@@ -63,6 +138,7 @@ const clock = {
         chrome.browserAction.setTitle({title: "not ticking"});
         chrome.alarms.clear("alarm");
         chrome.alarms.clear("minutes");
+        db.addEvent("stopped");
         return true;
     },
     pause: () => {
@@ -72,10 +148,12 @@ const clock = {
             clock.seconds = Math.floor((clock.alarmAt - Date.now()) / 1000);
             chrome.alarms.clear("alarm");
             chrome.alarms.clear("minutes");
+            db.addEvent("paused");
         } if (!clock.paused) {
             clock.alarmAt = Date.now() + (clock.seconds * 1000);
             chrome.alarms.create("alarm", { "delayInMinutes": clock.seconds*60 });
             chrome.alarms.create("minutes", { "delayInMinutes": 1, "periodInMinutes": 1 });
+            db.addEvent("unpaused");
         }
         clock.updateBadge(Math.round(clock.seconds / 60));
         return true;
@@ -89,7 +167,6 @@ const clock = {
             "paused": clock.paused,
             "onABreak": clock.onABreak,
             "ticking": clock.ticking,
-            "paused": clock.paused,
             "streakTimer": clock.streakTimer,
             "pauseTimer": clock.pauseTimer
         };
@@ -116,6 +193,7 @@ const clock = {
             chrome.browserAction.setBadgeText({"text": remaining.toString()});
         } else if (!alarm || alarm.name !== "minutes") {
             clock.onABreak = !clock.onABreak;
+            db.addEvent("switched");
             try {
                 if (clock.customSound) {
                     clock.ring.setAttribute("src", clock.customSoundData);
@@ -200,13 +278,15 @@ const msgListener = (message, sender, sendResponse) => {
     } else if (message.command === "pause") {
         clock.pause();
         sendResponse(true);
+    } else if (message.command === "getStats") {
+        sendResponse(db.getStats());
     }
 };
 
 // Initialize and load the ring sound
 clock.ring = document.createElement("audio");
-
 chrome.runtime.onMessage.addListener(msgListener);
 chrome.alarms.onAlarm.addListener(clock.alarm);
 chrome.storage.onChanged.addListener(clock.loadOptions);
 clock.loadOptions();
+db.createDB();
