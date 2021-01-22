@@ -136,26 +136,39 @@ const exportStatsCSV = (evt) => { evt.preventDefault(); exportStats("csv"); };
  * @param {object} evt the event that triggered the action
  */
 const exportStats = (format) => {
-    if (!format) { format = "json"; }
-    let responseHandler = (response) => {
-        var blob;
-        if (format == "csv") {
-            blob = new Blob([convertToCSV(response)], {'type': "application/csv;charset=utf-8"});
-        } else {
-            blob = new Blob([JSON.stringify(response)], {'type': "application/json;charset=utf-8"});
-        }
-        try {
-            chrome.downloads.download({
-                filename: "pomodoro-data." + format,
-                saveAs: true,
-                url: URL.createObjectURL(blob)
-            });
-        } catch (e) {
-            displayMessage("Sorry, there was a browser error.", e);
-            console.log(e);
-        }
-    };
-    chrome.runtime.sendMessage({"command": "getStats"}, responseHandler);
+    if (chrome.downloads === undefined) {
+        chrome.permissions.request({
+            permissions: ['downloads']
+        }, (granted) => {
+            console.log('permision: ', granted);
+            if (granted) {
+                exportStats(format);
+            } else {
+                displayMessage("Sorry, you can only download the stats if the permission is granted.");
+            }
+        });
+    } else {
+        if (!format) { format = "json"; }
+        let responseHandler = (response) => {
+            var blob;
+            if (format == "csv") {
+                blob = new Blob([convertToCSV(response)], {'type': "application/csv;charset=utf-8"});
+            } else {
+                blob = new Blob([JSON.stringify(response)], {'type': "application/json;charset=utf-8"});
+            }
+            try {
+                chrome.downloads.download({
+                    filename: "pomodoro-data." + format,
+                    saveAs: true,
+                    url: URL.createObjectURL(blob)
+                });
+            } catch (e) {
+                displayMessage("Sorry, there was a browser error.", e);
+                console.log(e);
+            }
+        };
+        chrome.runtime.sendMessage({"command": "getStats"}, responseHandler);
+    }
 };
 
 document.addEventListener("DOMContentLoaded", restoreOptions);
