@@ -42,6 +42,9 @@ img.top-commands {
 img#config {
     right: 7px;
 }
+img#help {
+  right: 40px;
+}
 .option-label, .option-input {
   margin-left: 5px;
   display: inline-block;
