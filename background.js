@@ -85,16 +85,23 @@ const clock = {
     ring: {},
     volume: 100,
     showMinutes: false,
+    autoStart: false,
+    loopDisabled: false,
+    useAdvancedTimers: false,
+    advancedTimers: [30,5],
+    advancedTimersIndex: 0,
     updateBadge: (minutes) => {
-        let color, text;
+        console.log("****onABreak: " + clock.onABreak);
+
+        let color;
         if (clock.paused) {
-            color = "LightSkyBlue";
+            color = "lightskyblue";
             title = "paused";
         } else if (clock.onABreak) {
             color = "green";
             title = "on a break";
         } else {
-            color = "DarkRed";
+            color = "darkred";
             title = "on a streak";
         }
         if (!clock.showMinutes) {
@@ -111,18 +118,25 @@ const clock = {
             } catch(e) {}
         }
         chrome.browserAction.setBadgeBackgroundColor({"color": color});
-        chrome.browserAction.setTitle({title: title});
+        chrome.browserAction.setTitle({"title": title});
         return true;
     },
     start: () => {
         clock.ticking = true;
         clock.timeStarted = Date.now();
-        clock.alarmAt = clock.timeStarted + (clock.streakTimer * 60000);
+        let timer = 0;
+        if (clock.useAdvancedTimers) {
+            timer = clock.advancedTimers[clock.advancedTimersIndex];
+            clock.advancedTimersIndex++;
+        } else {
+            timer = clock.streakTimer;
+        }
+        clock.alarmAt = clock.timeStarted + (timer * 60000);
+        clock.seconds = timer * 60;
         clock.paused =  false;
-        clock.seconds = clock.streakTimer * 60;
         clock.onABreak = false;
-        clock.updateBadge(clock.streakTimer);
-        chrome.alarms.create("alarm", { "delayInMinutes": parseInt(clock.streakTimer) });
+        clock.updateBadge(timer);
+        chrome.alarms.create("alarm", { "delayInMinutes": parseInt(timer) });
         chrome.alarms.clear("minutes");
         chrome.alarms.create("minutes", { "delayInMinutes": 1, "periodInMinutes": 1 });
         db.addEvent("started");
@@ -131,10 +145,15 @@ const clock = {
     reset: () => {
         clock.ticking = false;
         clock.paused = false;
-        clock.seconds = clock.streakTimer * 60;
+        if (clock.useAdvancedTimers) {
+            clock.seconds = clock.advancedTimers[0] * 60;
+        } else {
+            clock.seconds = clock.streakTimer * 60;
+        }
         clock.onABreak = false;
+        clock.advancedTimersIndex = 0;
         chrome.browserAction.setBadgeText({"text": ""});
-        chrome.browserAction.setBadgeBackgroundColor({"color":"red"});
+        chrome.browserAction.setBadgeBackgroundColor({"color":"darkred"});
         chrome.browserAction.setTitle({title: "not ticking"});
         chrome.alarms.clear("alarm");
         chrome.alarms.clear("minutes");
@@ -168,7 +187,9 @@ const clock = {
             "onABreak": clock.onABreak,
             "ticking": clock.ticking,
             "streakTimer": clock.streakTimer,
-            "pauseTimer": clock.pauseTimer
+            "pauseTimer": clock.pauseTimer,
+            "advancedTimers": clock.advancedTimers,
+            "useAdvancedTimers": clock.useAdvancedTimers
         };
     },
     loadOptions: () => {
@@ -178,8 +199,17 @@ const clock = {
             clock.volume = 100;
         }
         clock.showMinutes = (localStorage.showMinutes === true || localStorage.showMinutes === "true" || localStorage.showMinutes === undefined);
+        clock.autoStart = (localStorage.autoStart === true || localStorage.autoStart === "true");
+        clock.loopDisabled = (localStorage.loopDisabled === true || localStorage.loopDisabled === "true");
+        clock.useAdvancedTimers = (localStorage.useAdvancedTimers === true || localStorage.useAdvancedTimers === "true");
         clock.customSoundData = localStorage.customSoundData || "";
         clock.customSound = (clock.customSoundData !== "" && (localStorage.customSound === true || localStorage.customSound === "true"));
+        try {
+            clock.advancedTimers = JSON.parse(localStorage.advancedTimers);
+        } catch(e) {
+            console.warn("could not restore advancedTimers from localStorage: " + e);
+            clock.advancedTimers = [30,5];
+        }
     },
     alarm: (alarm) => {
         clock.loadOptions();
@@ -192,6 +222,23 @@ const clock = {
             let remaining = Math.round(clock.seconds / 60);
             chrome.browserAction.setBadgeText({"text": remaining.toString()});
         } else if (!alarm || alarm.name !== "minutes") {
+            // looping is disabled, stop now
+            if (clock.loopDisabled) {
+                try {
+                    let text = ("Good, another " + clock.streakTimer + " minutes streak done!");
+                    let notifDetail = {
+                        type: "basic",
+                        title: "Ding!",
+                        iconUrl: "icons/clock-48.png",
+                        message: text
+                    };
+                    chrome.notifications.create(notifDetail);
+                } catch (e) {
+                    console.warn("could not display notification: " + e);
+                }    
+                clock.reset();
+                return true;
+            }
             clock.onABreak = !clock.onABreak;
             db.addEvent("switched");
             try {
@@ -209,7 +256,20 @@ const clock = {
                 console.warn("could not ring: " + e);
             }
     
-            let minutes = (clock.onABreak ? clock.pauseTimer : clock.streakTimer);
+            let minutes;
+            if (clock.useAdvancedTimers 
+                && clock.advancedTimers 
+                && clock.advancedTimers.length > 0) {
+                    if (clock.advancedTimersIndex >= clock.advancedTimers.length) {
+                        // at the end of the array
+                        clock.advancedTimersIndex = 0;
+                        clock.onABreak = false;
+                    }
+                    minutes = (clock.advancedTimers[clock.advancedTimersIndex] ? clock.advancedTimers[clock.advancedTimersIndex] : 1);
+                    clock.advancedTimersIndex++;
+            } else {
+                minutes = (clock.onABreak ? clock.pauseTimer : clock.streakTimer);
+            }
             clock.seconds = minutes * 60;
             clock.timeStarted = Date.now();
             clock.alarmAt = clock.timeStarted + (clock.seconds * 1000);
@@ -238,12 +298,23 @@ const clock = {
 
 // If the browser allows it, use local storage to save set durations for the next session
 if (typeof (Storage) !== "undefined") {
+    clock.streakTimer = 30;
     if (parseInt(localStorage.streakTimer)) {
         clock.streakTimer = parseInt(localStorage.streakTimer);
         clock.seconds = clock.streakTimer * 60;
     }
+    clock.pauseTimer = 5;
     if (parseInt(localStorage.pauseTimer)) {
         clock.pauseTimer = parseInt(localStorage.pauseTimer);
+    }
+    clock.advancedTimers = [30,5];
+    if (localStorage.advancedTimers) {
+        try {
+            clock.advancedTimers = JSON.parse(localStorage.advancedTimers);
+        } catch(e) {
+            console.error("Unable to parse the localStorage value for advancedTimers");
+            console.error(e);
+        }
     }
 }
 
@@ -254,12 +325,15 @@ if (typeof (Storage) !== "undefined") {
  */
 const msgListener = (message, sender, sendResponse) => {
     console.log("received message from browser action: " + JSON.stringify(message));
-    if (message && message.streakTimer && message.pauseTimer) {
+    if (message && ((message.streakTimer && message.pauseTimer) || message.advancedTimers)) {
         clock.streakTimer = message.streakTimer;
         clock.pauseTimer = message.pauseTimer;
+        clock.advancedTimers = message.advancedTimers;
+
         if (typeof (Storage) !== "undefined") {
             localStorage.streakTimer = clock.streakTimer;
             localStorage.pauseTimer = clock.pauseTimer;
+            localStorage.advancedTimers = JSON.stringify(clock.advancedTimers);
         }
     }
     clock.loadOptions();
@@ -290,3 +364,7 @@ chrome.alarms.onAlarm.addListener(clock.alarm);
 chrome.storage.onChanged.addListener(clock.loadOptions);
 clock.loadOptions();
 db.createDB();
+clock.reset();
+if(clock.autoStart) {
+    clock.start();
+}

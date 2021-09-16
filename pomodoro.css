@@ -12,26 +12,33 @@ body {
     overflow-y: auto;
 }
 a {
-  color: var(--main-color);
-  text-decoration: none;
+    color: var(--main-color);
+    text-decoration: none;
 }
 div#container {
-  width: 270px;
-  margin: auto;
+    width: 270px;
+    margin: auto;
+}
+div#standardTimers {
+    display: inline-block;
+}
+div#advancedTimers {
+    display: none;
 }
 form#options-form {
     margin: auto;
-    padding-top: 10px;
-    width: 95%;
-    min-width: 400px;
+    margin-right:10px;
+    padding-top: 5px;
+    width: 93%;
+    min-width: 420px;
     line-height: 2.5em;
 }
 legend {
-  background-color: var(--main-color);
-  color: var(--main-bg-color);
-  padding: 3px 12px;
-  font-size: large;
-  border-radius: 4px;
+    background-color: var(--main-color);
+    color: var(--main-bg-color);
+    padding: 3px 12px;
+    font-size: large;
+    border-radius: 4px;
 }
 img.top-commands {
     position: absolute;
@@ -43,15 +50,18 @@ img#config {
     right: 7px;
 }
 img#help {
-  right: 40px;
+    right: 40px;
+}
+label {
+  font-size: large;
 }
 .option-label, .option-input {
-  margin-left: 5px;
-  display: inline-block;
-  line-height: 30px;
-  font-size: large;
-  color: var(--main-color);
-  cursor: pointer;
+    margin-left: 5px;
+    display: inline-block;
+    line-height: 20px;
+    font-size: large;
+    color: var(--main-color);
+    cursor: pointer;
 }
 input[type=range], select {
     width: 98%;

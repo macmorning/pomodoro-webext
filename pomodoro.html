@@ -12,10 +12,16 @@
     <a href="https://github.com/macmorning/pomodoro-webext/issues" title="get some help or post a request on github" target="_blank"><img id="help" src="../icons/question.png" class="top-commands"/></a>
     <div role="main">
       <div id="parameters">
-          <label for="streakTimer">Streak duration: <span id="streakTimer_value"></span> minutes</label>
-          <input id="streakTimer" min="1" max="90" value="30" type="range">
-          <label for="pauseTimer">Break duration: <span id="pauseTimer_value"></span> minutes</label>
-          <input id="pauseTimer" min="1" max="90" value="5" type="range">  
+          <div id="standardTimers">
+            <label for="streakTimer">Streak duration: <span id="streakTimer_value"></span> minutes</label>
+            <input id="streakTimer" min="1" max="90" value="30" type="range">
+            <label for="pauseTimer">Break duration: <span id="pauseTimer_value"></span> minutes</label>
+            <input id="pauseTimer" min="1" max="90" value="5" type="range">  
+          </div>
+          <div id="advancedTimers">
+            <label title="Comma separated numbers, ex: 30,5,30,5,30,10" for="advancedTimersInput">Timers: <img src="../icons/question.png" width="15px"/></label><br/>
+            <input id="advancedTimersInput" name="advancedTimersInput" type="text">
+          </div>
 
           <button id="startBtn">Start!</button>
           <button id="skipBtn">Skip</button>

@@ -1,6 +1,9 @@
 const context = {
     volume: 100,
     showMinutes: false,
+    autoStart: false,
+    loopDisabled: false,
+    useAdvancedTimers: false,
     customSoundData: "",
     customSoundFilename: ""
 };
@@ -27,7 +30,13 @@ const restoreOptions = () => {
 
     context.showMinutes = (localStorage.showMinutes === true || localStorage.showMinutes === "true" || localStorage.showMinutes === undefined);
     document.getElementById("showMinutes").checked = context.showMinutes;
-
+    context.autoStart = (localStorage.autoStart === true || localStorage.autoStart === "true");
+    document.getElementById("autoStart").checked = context.autoStart;
+    context.loopDisabled = (localStorage.loopDisabled === true || localStorage.loopDisabled === "true");
+    document.getElementById("loopDisabled").checked = context.loopDisabled;
+    context.useAdvancedTimers = (localStorage.useAdvancedTimers === true || localStorage.useAdvancedTimers === "true");
+    document.getElementById("useAdvancedTimers").checked = context.useAdvancedTimers;
+    
     let customSoundElt = document.getElementById("customSound");
     let soundFileElt = document.getElementById("soundFile");
 
@@ -82,8 +91,8 @@ const restoreOptions = () => {
             context.ring.pause();
         }, 5000);
     };
-    document.getElementById("exportStatsJSON").onclick = exportStatsJSON;
-    document.getElementById("exportStatsCSV").onclick = exportStatsCSV;
+    //document.getElementById("exportStatsJSON").onclick = exportStatsJSON;
+    //document.getElementById("exportStatsCSV").onclick = exportStatsCSV;
     document.querySelector("form").addEventListener("submit", saveOptions);
 };
 
@@ -96,6 +105,10 @@ const saveOptions = (evt) => {
     try {
         localStorage.volume = context.volume;
         localStorage.showMinutes = document.getElementById("showMinutes").checked;
+        localStorage.autoStart = document.getElementById("autoStart").checked;
+        localStorage.loopDisabled = document.getElementById("loopDisabled").checked;
+        localStorage.useAdvancedTimers = document.getElementById("useAdvancedTimers").checked;
+        
         localStorage.customSound = document.getElementById("customSound").checked;
         if (!document.getElementById("customSound").checked) {
             context.customSoundData = "";
