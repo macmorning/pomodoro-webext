@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap');
 :root {
   --main-bg-color: #F7F7F7;
   --main-color: #293E40;
@@ -5,7 +6,7 @@
   --btn-hover-color:#81B5A1;
 }
 body {
-    font-family: 'Helvetica', sans-serif !important;
+    font-family: 'Sora', sans-serif !important;
     color: var(--main-color);
     background-color: var(--main-bg-color);
     overflow-x: hidden;
