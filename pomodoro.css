@@ -55,13 +55,16 @@ img#help {
 label {
   font-size: large;
 }
-.option-label, .option-input {
+.option-label, .option-input, .option-comment {
     margin-left: 5px;
     display: inline-block;
     line-height: 20px;
     font-size: large;
     color: var(--main-color);
     cursor: pointer;
+}
+.option-comment {
+  font-size: small;
 }
 input[type=range], select {
     width: 98%;
