@@ -81,7 +81,9 @@ button {
   font-size: larger;
   font-weight: bold;
 }
-
+#exportStatsJSON, #exportStatsCSV {
+  display: none;
+}
 #timeCounter {
   text-align: center;
   font-size: 3em;

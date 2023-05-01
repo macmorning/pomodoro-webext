@@ -1,3 +1,4 @@
+const isFirefox = !chrome.app;
 const context = {
     volume: 100,
     showMinutes: false,
@@ -91,8 +92,12 @@ const restoreOptions = () => {
             context.ring.pause();
         }, 5000);
     };
-    //document.getElementById("exportStatsJSON").onclick = exportStatsJSON;
-    //document.getElementById("exportStatsCSV").onclick = exportStatsCSV;
+    if (isFirefox) {
+        document.getElementById("exportStatsJSON").onclick = exportStatsJSON;
+        document.getElementById("exportStatsJSON").style.display = "block";
+        document.getElementById("exportStatsCSV").onclick = exportStatsCSV;
+        document.getElementById("exportStatsCSV").style.display = "block";
+    }
     document.querySelector("form").addEventListener("submit", saveOptions);
 };
 
