@@ -74,7 +74,7 @@ const restoreOptions = () => {
 
     document.getElementById("volume").oninput = (evt) => {
         context.volume = evt.target.value;
-        updateField("volume");
+        document.getElementById("volume_value").innerHTML = evt.target.value;
     };
 
     document.getElementById("volume_test").onclick = (evt) => {

@@ -1,18 +1,21 @@
 :root {
-  --main-bg-color: #F7F7F7;
-  --main-color: #293E40;
-  --btn-color: var(--main-color);
-  --btn-hover-color:#81B5A1;
+  color-scheme: light;
+  --clock-mark-color: #F7F7F7;
+  --clock-min-color: #81B5A1;
+  --clock-sec-color: #F7F7F7;
+}
+/* If user prefers a dark appearance */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+  }
 }
 body {
     font-family: 'Helvetica', sans-serif !important;
-    color: var(--main-color);
-    background-color: var(--main-bg-color);
     overflow-x: hidden;
     overflow-y: auto;
 }
 a {
-    color: var(--main-color);
     text-decoration: none;
 }
 div#container {
@@ -30,12 +33,10 @@ form#options-form {
     margin-right:10px;
     padding-top: 5px;
     width: 93%;
-    min-width: 420px;
+    min-width: 370px;
     line-height: 2.5em;
 }
 legend {
-    background-color: var(--main-color);
-    color: var(--main-bg-color);
     padding: 3px 12px;
     font-size: large;
     border-radius: 4px;
@@ -59,8 +60,6 @@ label {
     margin-left: 5px;
     display: inline-block;
     line-height: 20px;
-    font-size: large;
-    color: var(--main-color);
     cursor: pointer;
 }
 .option-comment {
@@ -71,25 +70,18 @@ input[type=range], select {
     padding: 10px 18px;
     margin: 3px 0;
     display: inline-block;
-    border: 1px solid var(--main-color);
     box-sizing: border-box;
 }
 button {
   width: 100%;
-  background-color: var(--btn-color);
-  color: var(--main-bg-color);
   padding: 7px 10px;
   margin: 3px 0;
-  border: 1px var(--main-color) solid;
   border-radius: 4px;
   cursor: pointer;
   font-size: larger;
   font-weight: bold;
 }
 
-button:hover {
-    background-color: var(--btn-hover-color);
-}
 #timeCounter {
   text-align: center;
   font-size: 3em;
@@ -105,18 +97,17 @@ button:hover {
   cursor: pointer;
 }
 #clockFace {
-  stroke-width: 2px;
-  stroke: #fff; 
+  stroke-width: 3px;
 }
 #clockHandSeconds { 
   stroke-width: 1px; 
-  stroke: var(--btn-hover-color); 
+  stroke: var(--clock-sec-color); 
 }
 #clockHandMinutes { 
   stroke-width: 1px; 
-  stroke: #fff; 
+  stroke: var(--clock-min-color); 
 }
 .mark {
-  stroke-width: 1px; 
-  stroke: #fff;   
+  stroke-width: 2px; 
+  stroke: var(--clock-mark-color);
 }
