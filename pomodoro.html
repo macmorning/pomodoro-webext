@@ -13,9 +13,9 @@
     <div role="main">
       <div id="parameters">
           <div id="standardTimers">
-            <label for="streakTimer">Streak duration: <span id="streakTimer_value"></span> minutes</label>
+            <label for="streakTimer">Streak duration: <span id="streakTimer_value"></span>min</label>
             <input id="streakTimer" min="1" max="90" value="30" type="range">
-            <label for="pauseTimer">Break duration: <span id="pauseTimer_value"></span> minutes</label>
+            <label for="pauseTimer">Break duration: <span id="pauseTimer_value"></span>min</label>
             <input id="pauseTimer" min="1" max="90" value="5" type="range">  
           </div>
           <div id="advancedTimers">
@@ -36,6 +36,7 @@
             </defs>
             <g clip-path="url(#clipClock)">
               <rect id="clockFace" x="0" y="0" width="100" height="100"/>
+              <circle class="mark" cx="50" cy="50" r="45"/>
               <line id="mark12" class="mark" x1="50" y1="0" x2="50" y2="8"/>
               <line id="mark3" class="mark" x1="100" y1="50" x2="92" y2="50"/>
               <line id="mark6" class="mark" x1="50" y1="100" x2="50" y2="92"/>
