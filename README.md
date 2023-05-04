@@ -7,7 +7,7 @@ This extension offers a simple pomodoro clock to hack your productivity.
 
 I hope this extension will help you as much as it helps me!
 
-[!["Buy Me A Coffee"](https://user-images.githubusercontent.com/1376749/120938564-50c59780-c6e1-11eb-814f-22a0399623c5.png)](https://www.buymeacoffee.com/syvo)
+[!["Buy Me A Coffee"](https://raw.githubusercontent.com/macmorning/pomodoro-webext/master/doc/buymeacoffee.png)](https://www.buymeacoffee.com/syvo)
 
 # Install the extension
 
