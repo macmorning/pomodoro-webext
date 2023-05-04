@@ -47,8 +47,8 @@ const clock = {
         document.getElementById("streakTimer").dispatchEvent(new Event("input"));
         document.getElementById("pauseTimer").value = clock.pauseTimer;
         document.getElementById("pauseTimer").dispatchEvent(new Event("input"));
-        document.getElementById("timeCounter").innerHTML = Math.floor(clock.seconds / 60).toString().padStart(2, "0") + ":" + Math.floor(clock.seconds % 60).toString().padStart(2, "0");
-        document.getElementById("startBtn").innerHTML = (clock.ticking ? "Reset" : "Start!");
+        document.getElementById("timeCounter").innerText = Math.floor(clock.seconds / 60).toString().padStart(2, "0") + ":" + Math.floor(clock.seconds % 60).toString().padStart(2, "0");
+        document.getElementById("startBtn").innerText = (clock.ticking ? "Reset" : "Start!");
         if(clock.ticking) {
             document.getElementById("skipBtn").removeAttribute("disabled");
         } else {
@@ -82,11 +82,11 @@ window.onload = () => {
     clock.getCurrentState();
     document.getElementById("streakTimer").oninput = (evt) => {
         clock.streakTimer = evt.target.value;
-        document.getElementById("streakTimer_value").innerHTML = evt.target.value;
+        document.getElementById("streakTimer_value").innerText = evt.target.value;
     };
     document.getElementById("pauseTimer").oninput = (evt) => {
         clock.pauseTimer = evt.target.value;
-        document.getElementById("pauseTimer_value").innerHTML = evt.target.value;
+        document.getElementById("pauseTimer_value").innerText = evt.target.value;
     };
     document.getElementById("advancedTimersInput").oninput = (evt) => {
         try {

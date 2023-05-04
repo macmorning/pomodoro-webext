@@ -14,8 +14,8 @@ const context = {
  * @param {String} txt Message to display.
  */
 const displayMessage = (txt) => {
-    document.getElementById("messages").innerHTML = txt;
-    window.setTimeout(() => { document.getElementById("messages").innerHTML = "&nbsp;"; }, 3000);
+    document.getElementById("messages").innerText = txt;
+    window.setTimeout(() => { document.getElementById("messages").innerText = "\u00A0"; }, 3000);
 };
 
 /**
@@ -26,7 +26,7 @@ const restoreOptions = () => {
     if (context.volume === undefined) {
         context.volume = 100;
     }
-    document.getElementById("volume_value").innerHTML = context["volume"];
+    document.getElementById("volume_value").innerText = context["volume"];
     document.getElementById("volume").value = context["volume"];
 
     context.showMinutes = (localStorage.showMinutes === true || localStorage.showMinutes === "true" || localStorage.showMinutes === undefined);
@@ -75,7 +75,7 @@ const restoreOptions = () => {
 
     document.getElementById("volume").oninput = (evt) => {
         context.volume = evt.target.value;
-        document.getElementById("volume_value").innerHTML = evt.target.value;
+        document.getElementById("volume_value").innerText = evt.target.value;
     };
 
     document.getElementById("volume_test").onclick = (evt) => {
