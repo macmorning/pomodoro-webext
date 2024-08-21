@@ -7,6 +7,7 @@ const clock = {
     pauseTimer: 0,
     useAdvancedTimers: false,
     advancedTimers: [30,5],
+    inARow: 0,
     pause: () => {
         chrome.runtime.sendMessage({"command": "pause"}, clock.getCurrentState);
     },
@@ -31,6 +32,7 @@ const clock = {
             clock.pauseTimer = response.pauseTimer;
             clock.useAdvancedTimers = response.useAdvancedTimers;
             clock.advancedTimers = response.advancedTimers;
+            clock.inARow = response.inARow;
             clock.update();
         };
         chrome.runtime.sendMessage({"command": "getCurrentState"}, responseHandler);
@@ -49,6 +51,10 @@ const clock = {
         document.getElementById("pauseTimer").dispatchEvent(new Event("input"));
         document.getElementById("timeCounter").innerText = Math.floor(clock.seconds / 60).toString().padStart(2, "0") + ":" + Math.floor(clock.seconds % 60).toString().padStart(2, "0");
         document.getElementById("startBtn").innerText = (clock.ticking ? "Reset" : "Start!");
+        document.getElementById("onABreak").innerText = (clock.onABreak ? "relax!" : "on a streak");
+        document.getElementById("onABreak").style.display = (clock.ticking ? "block" : "none");
+        document.getElementById("streaksCounterValue").innerText = clock.inARow;
+        document.getElementById("streaksCounter").style.display = (clock.inARow > 1 ? "block" : "none");
         if(clock.ticking) {
             document.getElementById("skipBtn").removeAttribute("disabled");
         } else {

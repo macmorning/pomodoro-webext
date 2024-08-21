@@ -88,6 +88,28 @@ button {
   text-align: center;
   font-size: 3em;
 }
+#onABreak {
+  position: fixed;
+  text-align: center;
+  color:#F7F7F7;
+  bottom: 110px;
+  width: 270px;
+  font-size: 1.5em;
+}
+#streaksCounter {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  font-size: 1.5em;
+  text-align: right;
+}
+#streaksCounterValue {
+  display: block;
+}
+#streaksCounterText {
+  display: block;
+  font-size: 0.4em;
+}
 #pageDiv{
   min-width:350px;
   max-width:700px;
