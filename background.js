@@ -81,7 +81,7 @@ const clock = {
     paused: false,
     streakTimer: 30,
     pauseTimer: 5,
-    paused: false,
+    inARow: 0,
     ring: {},
     volume: 100,
     showMinutes: false,
@@ -136,7 +136,7 @@ const clock = {
         clock.paused =  false;
         clock.onABreak = false;
         clock.updateBadge(timer);
-        chrome.alarms.create("alarm", { "delayInMinutes": parseInt(timer) });
+        chrome.alarms.create("alarm", { "when": clock.alarmAt });
         chrome.alarms.clear("minutes");
         chrome.alarms.create("minutes", { "delayInMinutes": 1, "periodInMinutes": 1 });
         db.addEvent("started");
@@ -152,6 +152,7 @@ const clock = {
         }
         clock.onABreak = false;
         clock.advancedTimersIndex = 0;
+        clock.inARow = 0;
         chrome.browserAction.setBadgeText({"text": ""});
         chrome.browserAction.setBadgeBackgroundColor({"color":"darkred"});
         chrome.browserAction.setTitle({title: "not ticking"});
@@ -170,7 +171,7 @@ const clock = {
             db.addEvent("paused");
         } if (!clock.paused) {
             clock.alarmAt = Date.now() + (clock.seconds * 1000);
-            chrome.alarms.create("alarm", { "delayInMinutes": clock.seconds*60 });
+            chrome.alarms.create("alarm", { "when": clock.alarmAt });
             chrome.alarms.create("minutes", { "delayInMinutes": 1, "periodInMinutes": 1 });
             db.addEvent("unpaused");
         }
@@ -189,7 +190,9 @@ const clock = {
             "streakTimer": clock.streakTimer,
             "pauseTimer": clock.pauseTimer,
             "advancedTimers": clock.advancedTimers,
-            "useAdvancedTimers": clock.useAdvancedTimers
+            "useAdvancedTimers": clock.useAdvancedTimers,
+            "alarmAt": clock.alarmAt,
+            "inARow": clock.inARow
         };
     },
     loadOptions: () => {
@@ -207,6 +210,7 @@ const clock = {
         try {
             clock.advancedTimers = JSON.parse(localStorage.advancedTimers);
         } catch(e) {
+            // SyntaxError when no advancedTimers object was saved yet. Object is saved when clock is started.
             console.warn("could not restore advancedTimers from localStorage: " + e);
             clock.advancedTimers = [30,5];
         }
@@ -239,6 +243,7 @@ const clock = {
                 clock.reset();
                 return true;
             }
+            if (!clock.onABreak) { clock.inARow++; }
             clock.onABreak = !clock.onABreak;
             db.addEvent("switched");
             try {
@@ -275,7 +280,7 @@ const clock = {
             clock.alarmAt = clock.timeStarted + (clock.seconds * 1000);
             clock.updateBadge(minutes);
             chrome.alarms.clear("alarm");
-            chrome.alarms.create("alarm", { "delayInMinutes": parseInt(minutes) });
+            chrome.alarms.create("alarm", { "when": clock.alarmAt });
             chrome.alarms.clear("minutes");
             chrome.alarms.create("minutes", { "delayInMinutes": 1, "periodInMinutes": 1 });
     
