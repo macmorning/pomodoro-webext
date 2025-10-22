@@ -9,7 +9,9 @@
     "128": "icons/clock-128.png"
   },
   "background": {
-    "service_worker": "background.js"
+    "scripts": [
+      "background.js"
+    ]
   },
   "options_ui": {
     "page": "options.html"
@@ -24,10 +26,14 @@
   "permissions": [
     "storage",
     "notifications",
-    "alarms",
-    "offscreen"
+    "alarms"
   ],
   "optional_permissions": [
     "downloads"
-  ]
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "pomodoro-clock@macmorning.github.io"
+    }
+  }
 }

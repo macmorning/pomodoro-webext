@@ -5,7 +5,8 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 *.zip
-
+.kiro
+.dist
 # Runtime data
 pids
 *.pid
