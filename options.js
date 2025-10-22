@@ -1,58 +1,134 @@
-const isFirefox = !chrome.app;
+const isFirefox = typeof browser !== 'undefined';
+const browserAPI = isFirefox ? browser : chrome;
 const context = {
     volume: 100,
     showMinutes: false,
-    autoStart: false,
     loopDisabled: false,
     useAdvancedTimers: false,
+    soundEnabled: true,
     customSoundData: "",
     customSoundFilename: ""
 };
 
 /**
- * Displays a message for a short time.
+ * Displays a popup message that fades out after 3 seconds.
  * @param {String} txt Message to display.
+ * @param {String} type Type of message: 'success', 'error', 'info' (default: 'info')
  */
-const displayMessage = (txt) => {
-    document.getElementById("messages").innerText = txt;
-    window.setTimeout(() => { document.getElementById("messages").innerText = "\u00A0"; }, 3000);
+const showPopupMessage = (txt, type = 'info') => {
+    // Remove any existing popup
+    const existingPopup = document.getElementById('popup-message');
+    if (existingPopup) {
+        existingPopup.remove();
+    }
+
+    // Create popup element
+    const popup = document.createElement('div');
+    popup.id = 'popup-message';
+    popup.className = `popup-message popup-${type}`;
+    popup.textContent = txt;
+
+    // Add to page
+    document.body.appendChild(popup);
+
+    // Trigger animation
+    setTimeout(() => {
+        popup.classList.add('show');
+    }, 10);
+
+    // Fade out and remove after 3 seconds
+    setTimeout(() => {
+        popup.classList.add('fade-out');
+        setTimeout(() => {
+            if (popup.parentNode) {
+                popup.parentNode.removeChild(popup);
+            }
+        }, 300);
+    }, 3000);
 };
 
 /**
- * Restores the options saved into local storage
+ * Legacy function for backward compatibility
+ * @param {String} txt Message to display.
  */
-const restoreOptions = () => {
-    context.volume = localStorage.volume;
-    if (context.volume === undefined) {
-        context.volume = 100;
+const displayMessage = (txt) => {
+    showPopupMessage(txt, 'info');
+};
+
+/**
+ * Restores the options saved into storage
+ */
+const restoreOptions = async () => {
+    try {
+        const result = await browserAPI.storage.local.get([
+            'volume', 'showMinutes', 'loopDisabled', 
+            'useAdvancedTimers', 'soundEnabled', 'customSound', 'customSoundData', 'customSoundFilename'
+        ]);
+        
+        context.volume = result.volume !== undefined ? result.volume : 100;
+        context.showMinutes = result.showMinutes !== undefined ? result.showMinutes : true;
+        context.loopDisabled = result.loopDisabled !== undefined ? result.loopDisabled : false;
+        context.useAdvancedTimers = result.useAdvancedTimers !== undefined ? result.useAdvancedTimers : false;
+        context.soundEnabled = result.soundEnabled !== undefined ? result.soundEnabled : true;
+        context.customSound = result.customSound !== undefined ? result.customSound : false;
+        context.customSoundData = result.customSoundData || "";
+        context.customSoundFilename = result.customSoundFilename || "";
+    } catch(e) {
+        console.warn("could not load options from storage, trying localStorage: " + e);
+        // Fallback to localStorage
+        context.volume = localStorage.volume;
+        if (context.volume === undefined) {
+            context.volume = 100;
+        }
+        context.showMinutes = (localStorage.showMinutes === true || localStorage.showMinutes === "true" || localStorage.showMinutes === undefined);
+        context.loopDisabled = (localStorage.loopDisabled === true || localStorage.loopDisabled === "true");
+        context.useAdvancedTimers = (localStorage.useAdvancedTimers === true || localStorage.useAdvancedTimers === "true");
+        context.soundEnabled = (localStorage.soundEnabled === undefined || localStorage.soundEnabled === true || localStorage.soundEnabled === "true");
+        context.customSound = (localStorage.customSound === true || localStorage.customSound === "true");
+        context.customSoundData = localStorage.customSoundData || "";
+        context.customSoundFilename = localStorage.customSoundFilename || "";
     }
+    
     document.getElementById("volume_value").innerText = context["volume"];
     document.getElementById("volume").value = context["volume"];
-
-    context.showMinutes = (localStorage.showMinutes === true || localStorage.showMinutes === "true" || localStorage.showMinutes === undefined);
     document.getElementById("showMinutes").checked = context.showMinutes;
-    context.autoStart = (localStorage.autoStart === true || localStorage.autoStart === "true");
-    document.getElementById("autoStart").checked = context.autoStart;
-    context.loopDisabled = (localStorage.loopDisabled === true || localStorage.loopDisabled === "true");
     document.getElementById("loopDisabled").checked = context.loopDisabled;
-    context.useAdvancedTimers = (localStorage.useAdvancedTimers === true || localStorage.useAdvancedTimers === "true");
     document.getElementById("useAdvancedTimers").checked = context.useAdvancedTimers;
+    document.getElementById("soundEnabled").checked = context.soundEnabled;
     
+    let soundEnabledElt = document.getElementById("soundEnabled");
     let customSoundElt = document.getElementById("customSound");
     let soundFileElt = document.getElementById("soundFile");
+    let volumeElt = document.getElementById("volume");
+    let volumeTestElt = document.getElementById("volume_test");
 
-    document.getElementById("customSound").onchange = (evt) => {
-        context.customSound = customSoundElt.checked;
-        if (customSoundElt.checked) {
+    const updateSoundControls = () => {
+        const soundEnabled = soundEnabledElt.checked;
+        customSoundElt.disabled = !soundEnabled;
+        soundFileElt.disabled = !soundEnabled;
+        volumeElt.disabled = !soundEnabled;
+        volumeTestElt.style.opacity = soundEnabled ? "1" : "0.5";
+        volumeTestElt.style.pointerEvents = soundEnabled ? "auto" : "none";
+        
+        if (soundEnabled && customSoundElt.checked) {
             soundFileElt.style.visibility = "visible";
         } else {
             soundFileElt.style.visibility = "hidden";
         }
     };
-    context.customSound = (localStorage.customSound === true || localStorage.customSound === "true");
+
+    document.getElementById("soundEnabled").onchange = (evt) => {
+        context.soundEnabled = soundEnabledElt.checked;
+        updateSoundControls();
+    };
+
+    document.getElementById("customSound").onchange = (evt) => {
+        context.customSound = customSoundElt.checked;
+        updateSoundControls();
+    };
+    
     customSoundElt.checked = context.customSound;
-    customSoundElt.onchange();
-    context.customSoundData = localStorage.customSoundData || "";
+    updateSoundControls();
 
     soundFileElt.onchange = () => {
         context.customSoundFilename = soundFileElt.value.split(/(\\|\/)/g).pop();
@@ -67,7 +143,6 @@ const restoreOptions = () => {
         }
     }
 
-    context.customSoundFilename = (localStorage.customSoundFilename || "");
     if (context.customSoundFilename !== "") {
         document.getElementById("customSoundFilename").innerText = " (current: " + context.customSoundFilename + ")";
     }
@@ -79,8 +154,11 @@ const restoreOptions = () => {
     };
 
     document.getElementById("volume_test").onclick = (evt) => {
+        if (!context.soundEnabled) {
+            return; // Don't play sound if disabled
+        }
         context.ring = document.createElement("audio");
-        console.log((context.customSound && context.customSoundData));
+
         if (context.customSound && context.customSoundData) {
             context.ring.setAttribute("src", context.customSoundData);
         } else {
@@ -92,39 +170,66 @@ const restoreOptions = () => {
             context.ring.pause();
         }, 5000);
     };
-    if (isFirefox) {
-        document.getElementById("exportStatsJSON").onclick = exportStatsJSON;
-        document.getElementById("exportStatsJSON").style.display = "block";
-        document.getElementById("exportStatsCSV").onclick = exportStatsCSV;
-        document.getElementById("exportStatsCSV").style.display = "block";
-    }
+    // Export buttons are available in all browsers
+    document.getElementById("exportStatsJSON").onclick = exportStatsJSON;
+    document.getElementById("exportStatsJSON").style.display = "block";
+    document.getElementById("exportStatsCSV").onclick = exportStatsCSV;
+    document.getElementById("exportStatsCSV").style.display = "block";
     document.querySelector("form").addEventListener("submit", saveOptions);
 };
 
 /**
- * Saves the options into sync storage
+ * Saves the options into storage
  * @param {object} evt the event that triggered the action
  */
-const saveOptions = (evt) => {
+const saveOptions = async (evt) => {
     evt.preventDefault();
     try {
-        localStorage.volume = context.volume;
-        localStorage.showMinutes = document.getElementById("showMinutes").checked;
-        localStorage.autoStart = document.getElementById("autoStart").checked;
-        localStorage.loopDisabled = document.getElementById("loopDisabled").checked;
-        localStorage.useAdvancedTimers = document.getElementById("useAdvancedTimers").checked;
-        
-        localStorage.customSound = document.getElementById("customSound").checked;
         if (!document.getElementById("customSound").checked) {
             context.customSoundData = "";
             context.customSoundFilename = "";
         }
-        localStorage.customSoundData = context.customSoundData;
-        localStorage.customSoundFilename = context.customSoundFilename;
-        window.location.reload(true);
+        
+        await browserAPI.storage.local.set({
+            volume: context.volume,
+            showMinutes: document.getElementById("showMinutes").checked,
+            loopDisabled: document.getElementById("loopDisabled").checked,
+            useAdvancedTimers: document.getElementById("useAdvancedTimers").checked,
+            soundEnabled: document.getElementById("soundEnabled").checked,
+            customSound: document.getElementById("customSound").checked,
+            customSoundData: context.customSoundData,
+            customSoundFilename: context.customSoundFilename
+        });
+        
+        showPopupMessage("Options saved successfully!", "success");
+        
+        // Reload after a short delay to let user see the success message
+        setTimeout(() => {
+            window.location.reload(true);
+        }, 1000);
     } catch (e) {
-        displayMessage("Options could not be saved. Is storage enabled?");
-        console.log(e);
+        console.warn("could not save to storage, trying localStorage: " + e);
+        try {
+            // Fallback to localStorage
+            localStorage.volume = context.volume;
+            localStorage.showMinutes = document.getElementById("showMinutes").checked;
+            localStorage.loopDisabled = document.getElementById("loopDisabled").checked;
+            localStorage.useAdvancedTimers = document.getElementById("useAdvancedTimers").checked;
+            localStorage.soundEnabled = document.getElementById("soundEnabled").checked;
+            localStorage.customSound = document.getElementById("customSound").checked;
+            localStorage.customSoundData = context.customSoundData;
+            localStorage.customSoundFilename = context.customSoundFilename;
+            
+            showPopupMessage("Options saved successfully!", "success");
+            
+            // Reload after a short delay to let user see the success message
+            setTimeout(() => {
+                window.location.reload(true);
+            }, 1000);
+        } catch (e2) {
+            showPopupMessage("Options could not be saved. Is storage enabled?", "error");
+
+        }
     }
 };
 
@@ -154,15 +259,15 @@ const exportStatsCSV = (evt) => { evt.preventDefault(); exportStats("csv"); };
  * @param {object} evt the event that triggered the action
  */
 const exportStats = (format) => {
-    if (chrome.downloads === undefined) {
-        chrome.permissions.request({
+    if (browserAPI.downloads === undefined) {
+        browserAPI.permissions.request({
             permissions: ['downloads']
         }, (granted) => {
-            console.log('permision: ', granted);
+
             if (granted) {
                 exportStats(format);
             } else {
-                displayMessage("Sorry, you can only download the stats if the permission is granted.");
+                showPopupMessage("Download permission is required to export statistics.", "error");
             }
         });
     } else {
@@ -175,18 +280,21 @@ const exportStats = (format) => {
                 blob = new Blob([JSON.stringify(response)], {'type': "application/json;charset=utf-8"});
             }
             try {
-                chrome.downloads.download({
+                browserAPI.downloads.download({
                     filename: "pomodoro-data." + format,
                     saveAs: true,
                     url: URL.createObjectURL(blob)
                 });
+                showPopupMessage(`Statistics exported successfully as ${format.toUpperCase()}!`, "success");
             } catch (e) {
-                displayMessage("Sorry, there was a browser error.", e);
-                console.log(e);
+                showPopupMessage("Export failed due to a browser error.", "error");
+
             }
         };
-        chrome.runtime.sendMessage({"command": "getStats"}, responseHandler);
+        browserAPI.runtime.sendMessage({"command": "getStats"}, responseHandler);
     }
 };
 
-document.addEventListener("DOMContentLoaded", restoreOptions);
+document.addEventListener("DOMContentLoaded", () => {
+    restoreOptions();
+});

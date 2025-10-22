@@ -1,0 +1,20 @@
+{
+    "news": [
+        {
+            "version": "2.7.0",
+            "date": "2025-10-22",
+            "title": "Manifest V3 Compatibility & Feature Updates",
+            "items": [
+                "Migrated to Manifest v3, as required by Chrome & Edge stores",
+                "Removed 'Automatically start a streak on startup' feature (incompatible with Manifest V3 service workers)",
+                "Added this 'What's New' feature to keep you updated",
+                "Added option to disable notification sounds completely",
+                "Enhanced UI for single streak mode with better visual indicators",
+                "Improved dark theme contrast for better icon visibility",
+                "Enhanced cross-browser compatibility for Firefox and Chrome",
+                "Fixed audio playback delays - notifications now play instantly",
+                "Better error handling and state management"
+            ]
+        }
+    ]
+}

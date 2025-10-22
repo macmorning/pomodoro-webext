@@ -8,8 +8,43 @@
 
 <body>
   <div id="container">
-    <img src="../icons/options.png" id="config" class="top-commands" title="options"/>
-    <a href="https://github.com/macmorning/pomodoro-webext" title="get some help or post a request on github" target="_blank"><img id="help" src="../icons/question.png" class="top-commands"/></a>
+    <div id="config" class="top-commands icon-button" title="options">
+        <svg width="25" height="25" viewBox="0 0 16 16" fill="currentColor">
+            <circle cx="8" cy="8" r="7.5" fill="currentColor"/>
+            <!-- Round gear with 8 teeth -->
+            <g fill="white">
+                <!-- Main gear body -->
+                <circle cx="8" cy="8" r="5.5"/>
+                <!-- 8 gear teeth positioned around the circle -->
+                <rect x="7.2" y="1.5" width="1.6" height="2" rx="0.3"/>  <!-- 12 o'clock -->
+                <rect x="12.5" y="7.2" width="2" height="1.6" rx="0.3"/>  <!-- 3 o'clock -->
+                <rect x="7.2" y="12.5" width="1.6" height="2" rx="0.3"/>  <!-- 6 o'clock -->
+                <rect x="1.5" y="7.2" width="2" height="1.6" rx="0.3"/>   <!-- 9 o'clock -->
+                <!-- Diagonal teeth -->
+                <rect x="11.5" y="2.8" width="1.6" height="2" rx="0.3" transform="rotate(45 12.3 3.8)"/>  <!-- 1:30 -->
+                <rect x="11.5" y="11.2" width="1.6" height="2" rx="0.3" transform="rotate(135 12.3 12.2)"/> <!-- 4:30 -->
+                <rect x="2.9" y="11.2" width="1.6" height="2" rx="0.3" transform="rotate(225 3.7 12.2)"/>  <!-- 7:30 -->
+                <rect x="2.9" y="2.8" width="1.6" height="2" rx="0.3" transform="rotate(315 3.7 3.8)"/>   <!-- 10:30 -->
+            </g>
+            <!-- Center hole -->
+            <circle cx="8" cy="8" r="2.2" fill="currentColor"/>
+        </svg>
+    </div>
+    <div id="news" class="top-commands news-button" title="what's new">
+        <svg width="25" height="25" viewBox="0 0 16 16" fill="currentColor">
+            <circle cx="8" cy="8" r="7.5" fill="currentColor"/>
+            <path d="M8 4.5c-1.5 0-2.5 1-2.5 2.5 0 1.5 0.5 2.5 0.5 3.5h4c0-1 0.5-2 0.5-3.5 0-1.5-1-2.5-2.5-2.5z" fill="white"/>
+            <path d="M7.2 11.5h1.6c0 0.4-0.4 0.8-0.8 0.8s-0.8-0.4-0.8-0.8z" fill="white"/>
+        </svg>
+    </div>
+    <a href="https://github.com/macmorning/pomodoro-webext" title="get some help or post a request on github" target="_blank">
+        <div id="help" class="top-commands icon-button">
+            <svg width="25" height="25" viewBox="0 0 16 16" fill="currentColor">
+                <circle cx="8" cy="8" r="7.5" fill="currentColor"/>
+                <path d="M5.255 5.786a.237.237 0 0 0 .241.247h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286zm1.557 5.763c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94z" fill="white"/>
+            </svg>
+        </div>
+    </a>
     <div role="main">
       <div id="parameters">
           <div id="standardTimers">
@@ -36,18 +71,46 @@
         <svg id="clock" viewBox="0 0 100 100">
             <defs>
                 <clipPath id="clipClock">
-                    <circle cx="50" cy="50" r="45"/>
+                    <circle cx="50" cy="50" r="46"/>
                 </clipPath>
+                <radialGradient id="clockGradient" cx="50%" cy="30%" r="70%">
+                    <stop offset="0%" style="stop-color:#F5F5F5;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#E8E8E8;stop-opacity:1" />
+                </radialGradient>
+                <radialGradient id="clockGradientDark" cx="50%" cy="30%" r="70%">
+                    <stop offset="0%" style="stop-color:#3A3A3A;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#2A2A2A;stop-opacity:1" />
+                </radialGradient>
             </defs>
             <g clip-path="url(#clipClock)">
-              <rect id="clockFace" x="0" y="0" width="100" height="100"/>
-              <circle class="mark" cx="50" cy="50" r="45"/>
-              <line id="mark12" class="mark" x1="50" y1="0" x2="50" y2="8"/>
-              <line id="mark3" class="mark" x1="100" y1="50" x2="92" y2="50"/>
-              <line id="mark6" class="mark" x1="50" y1="100" x2="50" y2="92"/>
-              <line id="mark9" class="mark" x1="0" y1="50" x2="8" y2="50"/>
-              <line id="clockHandSeconds" x1="50" y1="50" x2="50" y2="10"/>
-              <line id="clockHandMinutes" x1="50" y1="50" x2="50" y2="20"/>
+              <!-- Clock face with subtle gradient -->
+              <rect id="clockFace" x="0" y="0" width="100" height="100" fill="url(#clockGradient)"/>
+              
+              <!-- Outer rim -->
+              <circle class="mark clock-rim" cx="50" cy="50" r="44"/>
+              
+              <!-- Hour markers (12, 3, 6, 9) - thicker -->
+              <line id="mark12" class="mark hour-mark" x1="50" y1="8" x2="50" y2="15"/>
+              <line id="mark3" class="mark hour-mark" x1="92" y1="50" x2="85" y2="50"/>
+              <line id="mark6" class="mark hour-mark" x1="50" y1="92" x2="50" y2="85"/>
+              <line id="mark9" class="mark hour-mark" x1="8" y1="50" x2="15" y2="50"/>
+              
+              <!-- Quarter hour markers (1, 2, 4, 5, 7, 8, 10, 11) - small dots -->
+              <circle class="quarter-dot" cx="71.65" cy="12.85" r="1.5"/>  <!-- 1 o'clock (30°) -->
+              <circle class="quarter-dot" cx="87.15" cy="28.35" r="1.5"/>  <!-- 2 o'clock (60°) -->
+              <circle class="quarter-dot" cx="87.15" cy="71.65" r="1.5"/>  <!-- 4 o'clock (120°) -->
+              <circle class="quarter-dot" cx="71.65" cy="87.15" r="1.5"/>  <!-- 5 o'clock (150°) -->
+              <circle class="quarter-dot" cx="28.35" cy="87.15" r="1.5"/>  <!-- 7 o'clock (210°) -->
+              <circle class="quarter-dot" cx="12.85" cy="71.65" r="1.5"/>  <!-- 8 o'clock (240°) -->
+              <circle class="quarter-dot" cx="12.85" cy="28.35" r="1.5"/>  <!-- 10 o'clock (300°) -->
+              <circle class="quarter-dot" cx="28.35" cy="12.85" r="1.5"/>  <!-- 11 o'clock (330°) -->
+              
+              <!-- Center dot -->
+              <circle class="clock-center" cx="50" cy="50" r="2"/>
+              
+              <!-- Clock hands -->
+              <line id="clockHandMinutes" class="hand-minute" x1="50" y1="50" x2="50" y2="18"/>
+              <line id="clockHandSeconds" class="hand-second" x1="50" y1="50" x2="50" y2="12"/>
             </g>
           </svg>
       </div>

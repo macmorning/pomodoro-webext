@@ -1,77 +1,290 @@
 :root {
   color-scheme: light;
-  --clock-mark-color: #F7F7F7;
+  --clock-mark-color: #000000;
   --clock-min-color: #81B5A1;
-  --clock-sec-color: #F7F7F7;
+  --clock-sec-color: #444444;
 }
+
 /* If user prefers a dark appearance */
 @media (prefers-color-scheme: dark) {
   :root {
     color-scheme: dark;
+    --clock-mark-color: #FFFFFF;
+    --clock-sec-color: #F0F0F0;
   }
 }
+
 body {
-    font-family: 'Helvetica', sans-serif !important;
-    overflow-x: hidden;
-    overflow-y: auto;
+  font-family: 'Helvetica', sans-serif !important;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
+
 a {
-    text-decoration: none;
+  text-decoration: none;
 }
+
 div#container {
-    width: 270px;
-    margin: auto;
+  width: 270px;
+  margin: auto;
 }
+
 div#standardTimers {
-    display: inline-block;
+  display: inline-block;
 }
+
 div#advancedTimers {
-    display: none;
+  display: none;
 }
+
 form#options-form {
-    margin: auto;
-    margin-right:10px;
-    padding-top: 5px;
-    width: 93%;
-    min-width: 370px;
-    line-height: 2.5em;
+  margin: auto;
+  margin-right: 10px;
+  padding-top: 5px;
+  width: 93%;
+  min-width: 370px;
+  line-height: 2.5em;
 }
+
 legend {
-    padding: 3px 12px;
-    font-size: large;
-    border-radius: 4px;
+  padding: 3px 12px;
+  font-size: large;
+  border-radius: 4px;
 }
-img.top-commands {
-    position: absolute;
-    width: 25px;
-    cursor: pointer;
-    top: 15px; 
+
+.top-commands {
+  position: absolute;
+  width: 25px;
+  height: 25px;
+  cursor: pointer;
+  top: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--clock-min-color, #81B5A1);
 }
-img#config {
-    right: 7px;
+
+.icon-button svg,
+.news-button svg {
+  width: 25px;
+  height: 25px;
+  fill: currentColor;
 }
-img#help {
-    right: 40px;
+
+#config {
+  right: 7px;
 }
+
+#help {
+  right: 40px;
+}
+
+.news-button {
+  right: 73px;
+}
+
+/* Theme-aware colors */
+@media (prefers-color-scheme: dark) {
+  .top-commands {
+    color: #e0e0e0;
+    /* Light gray background for better visibility */
+  }
+
+  /* Keep the inner symbols dark for good contrast against the light background */
+  .top-commands svg path[fill="white"] {
+    fill: #333;
+  }
+
+  .top-commands svg g[fill="white"] {
+    fill: #333;
+  }
+
+  .top-commands svg g[fill="white"] * {
+    fill: #333;
+  }
+
+  .top-commands svg circle[fill="currentColor"] {
+    fill: #e0e0e0;
+  }
+}
+
+.news-button.has-news {
+  animation: newsAlert 1.5s infinite;
+  color: #e74c3c;
+}
+
+.news-button.has-news svg {
+  filter: drop-shadow(0 0 4px rgba(231, 76, 60, 0.8));
+}
+
+@keyframes newsAlert {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+
+  15% {
+    transform: scale(1.25) rotate(-8deg);
+  }
+
+  30% {
+    transform: scale(1.3) rotate(8deg);
+  }
+
+  45% {
+    transform: scale(1.25) rotate(-8deg);
+  }
+
+  60% {
+    transform: scale(1.3) rotate(8deg);
+  }
+
+  75% {
+    transform: scale(1.25) rotate(-5deg);
+  }
+
+  90% {
+    transform: scale(1.15) rotate(3deg);
+  }
+
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .news-button.has-news {
+    color: #ff6b6b;
+  }
+
+  .news-button.has-news svg {
+    filter: drop-shadow(0 0 4px rgba(255, 107, 107, 0.8));
+  }
+}
+
+/* Hover animations for icons */
+.top-commands {
+  transition: transform 0.3s ease-in-out;
+}
+
+/* Ensure tooltips appear immediately on hover */
+.top-commands {
+  /* Ensure tooltips work properly with animations */
+  pointer-events: auto;
+}
+
+/* Force immediate tooltip display */
+.top-commands[title]:hover::before {
+  /* This ensures tooltips aren't delayed by animations */
+  animation-delay: 0s !important;
+}
+
+/* Options icon - simple rotation */
+#config:hover svg {
+  animation: optionsRotate 0.6s ease-in-out;
+}
+
+@keyframes optionsRotate {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(180deg);
+  }
+}
+
+/* Help icon - coin spin effect */
+#help:hover svg {
+  animation: helpSpin 0.8s ease-in-out;
+}
+
+@keyframes helpSpin {
+  0% {
+    transform: rotateY(0deg);
+  }
+
+  25% {
+    transform: rotateY(90deg) scaleX(0.3);
+  }
+
+  50% {
+    transform: rotateY(180deg);
+  }
+
+  75% {
+    transform: rotateY(270deg) scaleX(0.3);
+  }
+
+  100% {
+    transform: rotateY(360deg);
+  }
+}
+
+/* News icon - same animation as newsAlert but without color/glow */
+.news-button:hover:not(.has-news) svg {
+  animation: newsHover 1.5s ease-in-out;
+}
+
+@keyframes newsHover {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+
+  15% {
+    transform: scale(1.25) rotate(-8deg);
+  }
+
+  30% {
+    transform: scale(1.3) rotate(8deg);
+  }
+
+  45% {
+    transform: scale(1.25) rotate(-8deg);
+  }
+
+  60% {
+    transform: scale(1.3) rotate(8deg);
+  }
+
+  75% {
+    transform: scale(1.25) rotate(-5deg);
+  }
+
+  90% {
+    transform: scale(1.15) rotate(3deg);
+  }
+
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
 label {
   font-size: large;
 }
-.option-label, .option-input, .option-comment {
-    margin-left: 5px;
-    display: inline-block;
-    line-height: 20px;
-    cursor: pointer;
+
+.option-label,
+.option-input,
+.option-comment {
+  margin-left: 5px;
+  display: inline-block;
+  line-height: 20px;
+  cursor: pointer;
 }
+
 .option-comment {
   font-size: small;
 }
-input[type=range], select {
-    width: 98%;
-    padding: 10px 18px;
-    margin: 3px 0;
-    display: inline-block;
-    box-sizing: border-box;
+
+input[type=range],
+select {
+  width: 98%;
+  padding: 10px 18px;
+  margin: 3px 0;
+  display: inline-block;
+  box-sizing: border-box;
 }
+
 button {
   width: 100%;
   padding: 7px 10px;
@@ -81,21 +294,28 @@ button {
   font-size: larger;
   font-weight: bold;
 }
-#exportStatsJSON, #exportStatsCSV {
+
+#exportStatsJSON,
+#exportStatsCSV {
   display: none;
 }
+
 #timeCounter {
   text-align: center;
   font-size: 3em;
 }
+
 #onABreak {
   position: fixed;
   text-align: center;
-  color:#F7F7F7;
+  color: var(--clock-mark-color);
   bottom: 110px;
   width: 270px;
   font-size: 1.5em;
+  z-index: 10;
+  font-weight: 500;
 }
+
 #streaksCounter {
   position: absolute;
   bottom: 2px;
@@ -103,35 +323,100 @@ button {
   font-size: 1.5em;
   text-align: right;
 }
+
 #streaksCounterValue {
   display: block;
 }
+
 #streaksCounterText {
   display: block;
   font-size: 0.4em;
 }
-#pageDiv{
-  min-width:350px;
-  max-width:700px;
-  position:relative;
-  margin:auto;
+
+#pageDiv {
+  min-width: 350px;
+  max-width: 700px;
+  position: relative;
+  margin: auto;
 }
+
 #clockContainer {
   margin: auto;
   cursor: pointer;
+  aspect-ratio: 1;
+  width: 100%;
+  max-width: 270px;
 }
+
+#clock {
+  width: 100%;
+  height: 100%;
+}
+
 #clockFace {
   stroke-width: 3px;
+  fill: url(#clockGradient);
 }
-#clockHandSeconds { 
-  stroke-width: 1px; 
-  stroke: var(--clock-sec-color); 
+
+@media (prefers-color-scheme: dark) {
+  #clockFace {
+    fill: url(#clockGradientDark);
+  }
 }
-#clockHandMinutes { 
-  stroke-width: 1px; 
-  stroke: var(--clock-min-color); 
+
+/* Clock rim */
+.clock-rim {
+  fill: none;
+  stroke-width: 1px;
+  stroke: var(--clock-mark-color);
 }
+
+/* Hour markers (12, 3, 6, 9) */
+.hour-mark {
+  stroke-width: 3px;
+  stroke: var(--clock-mark-color);
+  stroke-linecap: round;
+}
+
+/* Quarter hour markers - small dots */
+.quarter-dot {
+  fill: var(--clock-mark-color);
+}
+
+/* Center dot */
+.clock-center {
+  fill: var(--clock-min-color);
+  stroke: var(--clock-mark-color);
+  stroke-width: 1px;
+}
+
+/* Clock hands */
+.hand-second {
+  stroke-width: 1px;
+  stroke: var(--clock-sec-color);
+  stroke-linecap: round;
+}
+
+.hand-minute {
+  stroke-width: 2px;
+  stroke: var(--clock-min-color);
+  stroke-linecap: round;
+}
+
+
+
+/* Legacy support */
+#clockHandSeconds {
+  stroke-width: 1px;
+  stroke: var(--clock-sec-color);
+}
+
+#clockHandMinutes {
+  stroke-width: 1px;
+  stroke: var(--clock-min-color);
+}
+
 .mark {
-  stroke-width: 2px; 
+  stroke-width: 2px;
   stroke: var(--clock-mark-color);
 }

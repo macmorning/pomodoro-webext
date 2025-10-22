@@ -21,6 +21,10 @@ If you find the extension useful and are on Firefox, you can help by emailing am
 
 Although the extension is intentionaly kept simple, some features can be explained.
 
+## What's New
+
+The extension now includes a "What's New" feature that keeps you updated on the latest improvements and features. Click the bell icon in the popup to see recent updates. New versions will show a visual indicator until you've seen the news.
+
 ## Custom sounds
 
 The extension supports defining your own notification sound.
@@ -43,7 +47,7 @@ See you on [github](https://github.com/macmorning/pomodoro-webext/issues)!
 
 # Privacy policy
 
-This extension (the "app") only saves preferences and usage metrics in the local browser storage area. 
+This extension (the "app") only saves preferences and usage metrics in the local browser storage area for your own information. 
 
 ABSOLUTELY NO DATA OR PERSONAL INFORMATIONS ARE STORED ANYWHERE ELSE.
 All data can be deleted by the user at browser level. 
