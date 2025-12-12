@@ -136,37 +136,29 @@ const restoreOptions = async () => {
     // Handle mute other tabs checkbox - must be synchronous for permission request
     document.getElementById("muteOtherTabs").onchange = (evt) => {
         const wantsToEnable = muteOtherTabsElt.checked;
-        console.log("[Mute Tabs] Checkbox clicked, wants to enable:", wantsToEnable);
         
         if (wantsToEnable) {
-            console.log("[Mute Tabs] Requesting tabs permission synchronously...");
             showPopupMessage("Requesting permission to access tab information...", "info");
             
             // Call permissions.request synchronously - no await!
             browserAPI.permissions.request({ permissions: ['tabs'] }).then((granted) => {
-                console.log("[Mute Tabs] Permission request result:", granted);
-                
                 if (granted) {
                     context.muteOtherTabs = true;
-                    console.log("[Mute Tabs] Permission granted successfully");
-                    showPopupMessage("Permission granted! Mute tabs feature enabled.", "success");
+                    showPopupMessage("Permission granted! Click SAVE to apply the changes.", "success");
                 } else {
-                    console.log("[Mute Tabs] Permission denied by user");
                     context.muteOtherTabs = false;
                     muteOtherTabsElt.checked = false;
                     showPopupMessage("Permission denied. Feature will not be enabled.", "error");
                 }
             }).catch((e) => {
-                console.error("[Mute Tabs] Error during permission request:", e);
-                console.error("[Mute Tabs] Error message:", e.message);
+                console.error("Error requesting permission:", e);
                 context.muteOtherTabs = false;
                 muteOtherTabsElt.checked = false;
                 showPopupMessage("Error requesting permission: " + e.message, "error");
             });
         } else {
-            console.log("[Mute Tabs] Feature disabled by user");
             context.muteOtherTabs = false;
-            showPopupMessage("Mute tabs feature disabled.", "info");
+            showPopupMessage("Mute tabs feature disabled. Click SAVE to apply.", "info");
         }
     };
     
