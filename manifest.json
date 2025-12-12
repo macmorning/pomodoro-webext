@@ -28,6 +28,7 @@
     "offscreen"
   ],
   "optional_permissions": [
-    "downloads"
+    "downloads",
+    "tabs"
   ]
 }
