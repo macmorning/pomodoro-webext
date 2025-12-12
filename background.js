@@ -456,22 +456,30 @@ const clock = {
                 await clock.ensureOffscreenDocument();
 
                 if (clock.offscreenReady) {
-                    // Send message without awaiting to avoid delays
+                    // Send message with muted tabs for unmuting after sound ends
                     chrome.runtime.sendMessage({
                         type: 'PLAY_SOUND',
                         soundData: clock.customSound ? clock.customSoundData : null,
-                        volume: clock.volume / 100
+                        volume: clock.volume / 100,
+                        mutedTabs: mutedTabs
                     }).catch((e) => {
                         console.warn("Could not send audio message: " + e);
+                        // Unmute tabs if message failed
+                        if (mutedTabs.length > 0) {
+                            clock.unmuteTabsById(mutedTabs);
+                        }
                     });
                 } else {
                     console.warn("Offscreen document not ready, skipping audio");
+                    // Unmute tabs immediately if we can't play sound
+                    if (mutedTabs.length > 0) {
+                        await clock.unmuteTabsById(mutedTabs);
+                    }
                 }
             } else {
                 // Use direct audio element for Firefox and Manifest V2
                 if (!clock.ring) {
                     clock.ring = new Audio();
-                    // Preload the default sound
                     clock.ring.preload = 'auto';
                 }
 
@@ -486,22 +494,21 @@ const clock = {
 
                 clock.ring.volume = clock.volume / 100;
 
+                // Set up onended handler to unmute tabs when sound actually finishes
+                clock.ring.onended = () => {
+                    if (mutedTabs.length > 0) {
+                        clock.unmuteTabsById(mutedTabs);
+                    }
+                };
+
                 // Play without awaiting to avoid blocking
                 clock.ring.play().catch((e) => {
                     console.warn("Could not play audio: " + e);
+                    // Unmute tabs if playback failed
+                    if (mutedTabs.length > 0) {
+                        clock.unmuteTabsById(mutedTabs);
+                    }
                 });
-
-                setTimeout(() => {
-                    clock.ring.pause();
-                    clock.ring.currentTime = 0;
-                }, 9000);
-            }
-
-            // Unmute tabs after sound finishes (9 seconds)
-            if (mutedTabs.length > 0) {
-                setTimeout(() => {
-                    clock.unmuteTabsById(mutedTabs);
-                }, 9000);
             }
         } catch (e) {
             console.warn("Could not play notification sound: " + e);
@@ -656,6 +663,14 @@ const msgListener = (message, sender, sendResponse) => {
             console.log("Background script not initialized, initializing now...");
             await initializeBackgroundScript();
         }
+        
+        // Handle unmute request from offscreen document
+        if (message.type === 'UNMUTE_TABS' && message.mutedTabs) {
+            await clock.unmuteTabsById(message.mutedTabs);
+            sendResponse({ success: true });
+            return;
+        }
+        
         if (message && ((message.streakTimer && message.pauseTimer) || message.advancedTimers || message.loopDisabled !== undefined)) {
             // Validate and set streak timer
             if (message.streakTimer && !isNaN(message.streakTimer) && message.streakTimer > 0) {
