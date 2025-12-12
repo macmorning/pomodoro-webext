@@ -9,7 +9,8 @@
     "128": "icons/clock-128.png"
   },
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "scripts": ["background.js"]
   },
   "options_ui": {
     "page": "options.html"
