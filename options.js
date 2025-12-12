@@ -133,47 +133,36 @@ const restoreOptions = async () => {
         updateSoundControls();
     };
 
-    document.getElementById("muteOtherTabs").onchange = async (evt) => {
+    // Handle mute other tabs checkbox - must be synchronous for permission request
+    document.getElementById("muteOtherTabs").onchange = (evt) => {
         const wantsToEnable = muteOtherTabsElt.checked;
         console.log("[Mute Tabs] Checkbox clicked, wants to enable:", wantsToEnable);
         
         if (wantsToEnable) {
-            try {
-                console.log("[Mute Tabs] Checking if tabs permission already granted...");
-                const hasPermission = await browserAPI.permissions.contains({ permissions: ['tabs'] });
-                console.log("[Mute Tabs] Has permission:", hasPermission);
+            console.log("[Mute Tabs] Requesting tabs permission synchronously...");
+            showPopupMessage("Requesting permission to access tab information...", "info");
+            
+            // Call permissions.request synchronously - no await!
+            browserAPI.permissions.request({ permissions: ['tabs'] }).then((granted) => {
+                console.log("[Mute Tabs] Permission request result:", granted);
                 
-                if (!hasPermission) {
-                    console.log("[Mute Tabs] Requesting tabs permission...");
-                    showPopupMessage("This feature requires permission to access tab information to mute other tabs during notifications.", "info");
-                    
-                    const granted = await browserAPI.permissions.request({ permissions: ['tabs'] });
-                    console.log("[Mute Tabs] Permission request result:", granted);
-                    
-                    if (granted) {
-                        context.muteOtherTabs = true;
-                        console.log("[Mute Tabs] Permission granted successfully");
-                        showPopupMessage("Permission granted! Mute tabs feature enabled.", "success");
-                    } else {
-                        console.log("[Mute Tabs] Permission denied by user");
-                        context.muteOtherTabs = false;
-                        muteOtherTabsElt.checked = false;
-                        showPopupMessage("Permission denied. Feature will not be enabled.", "error");
-                    }
-                } else {
-                    console.log("[Mute Tabs] Permission already granted");
+                if (granted) {
                     context.muteOtherTabs = true;
-                    showPopupMessage("Permission already granted. Feature enabled.", "success");
+                    console.log("[Mute Tabs] Permission granted successfully");
+                    showPopupMessage("Permission granted! Mute tabs feature enabled.", "success");
+                } else {
+                    console.log("[Mute Tabs] Permission denied by user");
+                    context.muteOtherTabs = false;
+                    muteOtherTabsElt.checked = false;
+                    showPopupMessage("Permission denied. Feature will not be enabled.", "error");
                 }
-            } catch (e) {
-                console.error("[Mute Tabs] Error during permission flow:", e);
-                console.error("[Mute Tabs] Error name:", e.name);
+            }).catch((e) => {
+                console.error("[Mute Tabs] Error during permission request:", e);
                 console.error("[Mute Tabs] Error message:", e.message);
-                console.error("[Mute Tabs] Error stack:", e.stack);
                 context.muteOtherTabs = false;
                 muteOtherTabsElt.checked = false;
                 showPopupMessage("Error requesting permission: " + e.message, "error");
-            }
+            });
         } else {
             console.log("[Mute Tabs] Feature disabled by user");
             context.muteOtherTabs = false;
