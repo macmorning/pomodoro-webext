@@ -192,6 +192,13 @@ const restoreOptions = async () => {
         if (!context.soundEnabled) {
             return; // Don't play sound if disabled
         }
+        
+        // Stop any currently playing test sound
+        if (context.ring && !context.ring.paused) {
+            context.ring.pause();
+            context.ring.currentTime = 0;
+        }
+        
         context.ring = document.createElement("audio");
 
         if (context.customSound && context.customSoundData) {
@@ -200,10 +207,9 @@ const restoreOptions = async () => {
             context.ring.setAttribute("src", "sound/bell-ringing-02.mp3");
         }
         context.ring.volume = context.volume / 100;
+        
+        // Play the sound completely, no timeout
         context.ring.play();
-        window.setTimeout(() => {
-            context.ring.pause();
-        }, 9000);
     };
     // Export buttons are available in all browsers
     document.getElementById("exportStatsJSON").onclick = exportStatsJSON;
@@ -301,8 +307,7 @@ const exportStats = (format) => {
             permissions: ['downloads']
         }).then((granted) => {
             if (granted) {
-                exportStats(format);
-            } else {
+                exportStats(format);            } else {
                 showPopupMessage("Download permission is required to export statistics.", "error");
             }
         }).catch((e) => {
