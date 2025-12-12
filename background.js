@@ -104,6 +104,7 @@ const clock = {
     advancedTimersIndex: 0,
     customSound: false,
     customSoundData: "",
+    muteOtherTabs: false,
     initialized: false,
 
     updateBadge: async (minutes) => {
@@ -270,7 +271,7 @@ const clock = {
         try {
             const result = await browserAPI.storage.local.get([
                 'volume', 'showMinutes', 'loopDisabled',
-                'useAdvancedTimers', 'soundEnabled', 'customSoundData', 'customSound', 'advancedTimers'
+                'useAdvancedTimers', 'soundEnabled', 'customSoundData', 'customSound', 'advancedTimers', 'muteOtherTabs'
             ]);
 
             clock.volume = result.volume !== undefined ? result.volume : 100;
@@ -281,6 +282,7 @@ const clock = {
             clock.customSoundData = result.customSoundData || "";
             clock.customSound = result.customSound !== undefined ? result.customSound : false;
             clock.advancedTimers = result.advancedTimers || [30, 5];
+            clock.muteOtherTabs = result.muteOtherTabs !== undefined ? result.muteOtherTabs : false;
         } catch (e) {
             console.warn("could not load options from storage, trying localStorage: " + e);
             // Fallback to localStorage for compatibility
@@ -292,6 +294,7 @@ const clock = {
                 clock.soundEnabled = (localStorage.soundEnabled === undefined || localStorage.soundEnabled === true || localStorage.soundEnabled === "true");
                 clock.customSoundData = localStorage.customSoundData || "";
                 clock.customSound = (clock.customSoundData !== "" && (localStorage.customSound === true || localStorage.customSound === "true"));
+                clock.muteOtherTabs = (localStorage.muteOtherTabs === true || localStorage.muteOtherTabs === "true");
                 try {
                     clock.advancedTimers = JSON.parse(localStorage.advancedTimers);
                 } catch (e) {
@@ -391,12 +394,61 @@ const clock = {
         }
     },
 
+    muteAllOtherTabs: async () => {
+        // Check if we have tabs permission
+        const hasPermission = await browserAPI.permissions.contains({ permissions: ['tabs'] });
+        if (!hasPermission || !clock.muteOtherTabs) {
+            return [];
+        }
+
+        try {
+            const tabs = await browserAPI.tabs.query({ audible: true });
+            const mutedTabs = [];
+
+            for (const tab of tabs) {
+                if (!tab.mutedInfo.muted) {
+                    await browserAPI.tabs.update(tab.id, { muted: true });
+                    mutedTabs.push(tab.id);
+                    console.log(`Muted tab ${tab.id}`);
+                }
+            }
+
+            return mutedTabs;
+        } catch (e) {
+            console.warn("Could not mute tabs: " + e);
+            return [];
+        }
+    },
+
+    unmuteTabsById: async (tabIds) => {
+        if (!tabIds || tabIds.length === 0) {
+            return;
+        }
+
+        try {
+            for (const tabId of tabIds) {
+                try {
+                    await browserAPI.tabs.update(tabId, { muted: false });
+                    console.log(`Unmuted tab ${tabId}`);
+                } catch (e) {
+                    // Tab might have been closed, ignore error
+                    console.warn(`Could not unmute tab ${tabId}: ` + e);
+                }
+            }
+        } catch (e) {
+            console.warn("Error unmuting tabs: " + e);
+        }
+    },
+
     playNotificationSound: async () => {
         // Check if sound is enabled
         if (!clock.soundEnabled) {
             console.log("Notification sound is disabled, skipping audio");
             return;
         }
+
+        // Mute other tabs if feature is enabled
+        const mutedTabs = await clock.muteAllOtherTabs();
         
         try {
             if (isManifestV3 && !isFirefox) {
@@ -442,10 +494,21 @@ const clock = {
                 setTimeout(() => {
                     clock.ring.pause();
                     clock.ring.currentTime = 0;
-                }, 5000);
+                }, 9000);
+            }
+
+            // Unmute tabs after sound finishes (9 seconds)
+            if (mutedTabs.length > 0) {
+                setTimeout(() => {
+                    clock.unmuteTabsById(mutedTabs);
+                }, 9000);
             }
         } catch (e) {
             console.warn("Could not play notification sound: " + e);
+            // Ensure tabs are unmuted even if there's an error
+            if (mutedTabs.length > 0) {
+                await clock.unmuteTabsById(mutedTabs);
+            }
         }
     },
 

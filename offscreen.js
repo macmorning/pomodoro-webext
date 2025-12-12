@@ -31,13 +31,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 sendResponse({ success: false, error: e.message });
             });
             
-            // Stop after 5 seconds
+            // Stop after 9 seconds
             setTimeout(() => {
                 if (!audio.paused) {
                     audio.pause();
                     audio.currentTime = 0;
                 }
-            }, 5000);
+            }, 9000);
             
         } catch (e) {
             console.error('Error in sound handler:', e);
