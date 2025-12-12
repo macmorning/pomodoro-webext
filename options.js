@@ -135,38 +135,49 @@ const restoreOptions = async () => {
 
     document.getElementById("muteOtherTabs").onchange = async (evt) => {
         const wantsToEnable = muteOtherTabsElt.checked;
+        console.log("[Mute Tabs] Checkbox clicked, wants to enable:", wantsToEnable);
         
         if (wantsToEnable) {
-            // Check if we already have the permission
-            const hasPermission = await browserAPI.permissions.contains({ permissions: ['tabs'] });
-            
-            if (!hasPermission) {
-                // Request permission
-                showPopupMessage("This feature requires permission to access tab information to mute other tabs during notifications.", "info");
+            try {
+                console.log("[Mute Tabs] Checking if tabs permission already granted...");
+                const hasPermission = await browserAPI.permissions.contains({ permissions: ['tabs'] });
+                console.log("[Mute Tabs] Has permission:", hasPermission);
                 
-                try {
+                if (!hasPermission) {
+                    console.log("[Mute Tabs] Requesting tabs permission...");
+                    showPopupMessage("This feature requires permission to access tab information to mute other tabs during notifications.", "info");
+                    
                     const granted = await browserAPI.permissions.request({ permissions: ['tabs'] });
+                    console.log("[Mute Tabs] Permission request result:", granted);
                     
                     if (granted) {
                         context.muteOtherTabs = true;
+                        console.log("[Mute Tabs] Permission granted successfully");
                         showPopupMessage("Permission granted! Mute tabs feature enabled.", "success");
                     } else {
-                        // User denied permission
+                        console.log("[Mute Tabs] Permission denied by user");
                         context.muteOtherTabs = false;
                         muteOtherTabsElt.checked = false;
                         showPopupMessage("Permission denied. Feature will not be enabled.", "error");
                     }
-                } catch (e) {
-                    console.error("Error requesting permission:", e);
-                    context.muteOtherTabs = false;
-                    muteOtherTabsElt.checked = false;
-                    showPopupMessage("Error requesting permission. Feature will not be enabled.", "error");
+                } else {
+                    console.log("[Mute Tabs] Permission already granted");
+                    context.muteOtherTabs = true;
+                    showPopupMessage("Permission already granted. Feature enabled.", "success");
                 }
-            } else {
-                context.muteOtherTabs = true;
+            } catch (e) {
+                console.error("[Mute Tabs] Error during permission flow:", e);
+                console.error("[Mute Tabs] Error name:", e.name);
+                console.error("[Mute Tabs] Error message:", e.message);
+                console.error("[Mute Tabs] Error stack:", e.stack);
+                context.muteOtherTabs = false;
+                muteOtherTabsElt.checked = false;
+                showPopupMessage("Error requesting permission: " + e.message, "error");
             }
         } else {
+            console.log("[Mute Tabs] Feature disabled by user");
             context.muteOtherTabs = false;
+            showPopupMessage("Mute tabs feature disabled.", "info");
         }
     };
     
@@ -307,13 +318,15 @@ const exportStats = (format) => {
     if (browserAPI.downloads === undefined) {
         browserAPI.permissions.request({
             permissions: ['downloads']
-        }, (granted) => {
-
+        }).then((granted) => {
             if (granted) {
                 exportStats(format);
             } else {
                 showPopupMessage("Download permission is required to export statistics.", "error");
             }
+        }).catch((e) => {
+            console.error("Error requesting download permission:", e);
+            showPopupMessage("Error requesting download permission.", "error");
         });
     } else {
         if (!format) { format = "json"; }
