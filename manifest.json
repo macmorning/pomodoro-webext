@@ -9,7 +9,6 @@
     "128": "icons/clock-128.png"
   },
   "background": {
-    "service_worker": "background.js",
     "scripts": ["background.js"]
   },
   "options_ui": {
@@ -25,8 +24,7 @@
   "permissions": [
     "storage",
     "notifications",
-    "alarms",
-    "offscreen"
+    "alarms"
   ],
   "optional_permissions": [
     "downloads",
