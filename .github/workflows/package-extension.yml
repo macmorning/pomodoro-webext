@@ -1,0 +1,78 @@
+name: Package Extension
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  package:
+    name: Build the extension packages
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Show context
+      run: |
+        echo github.event.action = ${{ github.event.action }}
+        echo github.event_name = ${{ github.event_name }}
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Create Firefox package
+      run: |
+        # Create temporary directory for Firefox build
+        mkdir -p firefox-build
+        
+        # Copy all required files and directories
+        cp -r background firefox-build/
+        cp -r content-script firefox-build/
+        cp -r css firefox-build/
+        cp -r dialog firefox-build/
+        cp -r icons firefox-build/
+        cp -r options firefox-build/
+        cp -r shared firefox-build/
+        cp LICENSE firefox-build/
+        cp README.md firefox-build/
+        
+        # Copy Firefox manifest as manifest.json
+        cp manifest-firefox.json firefox-build/manifest.json
+        
+        # Create zip file
+        cd firefox-build
+        zip -r ../pomodoro-firefox-${GITHUB_REF_NAME}.zip .
+        cd ..
+        
+    - name: Create Chromium package
+      run: |
+        # Create temporary directory for Chromium build
+        mkdir -p chromium-build
+        
+        # Copy all required files and directories
+        cp -r background chromium-build/
+        cp -r content-script chromium-build/
+        cp -r css chromium-build/
+        cp -r dialog chromium-build/
+        cp -r icons chromium-build/
+        cp -r options chromium-build/
+        cp -r shared chromium-build/
+        cp LICENSE chromium-build/
+        cp README.md chromium-build/
+        
+        # Copy Chromium manifest as manifest.json
+        cp manifest-chromium.json chromium-build/manifest.json
+        
+        # Create zip file
+        cd chromium-build
+        zip -r ../pomodoro-chromium-${GITHUB_REF_NAME}.zip .
+        cd ..
+
+    - name: Upload Firefox package
+      uses: actions/upload-artifact@v4
+      with:
+        name: pomodoro-firefox-${{ github.ref_name }}
+        path: pomodoro-firefox-${{ github.ref_name }}.zip
+        
+    - name: Upload Chromium package
+      uses: actions/upload-artifact@v4
+      with:
+        name: pomodoro-chromium-${{ github.ref_name }}
+        path: pomodoro-chromium-${{ github.ref_name }}.zip
