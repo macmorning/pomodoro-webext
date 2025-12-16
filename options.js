@@ -7,7 +7,8 @@ const context = {
     useAdvancedTimers: false,
     soundEnabled: true,
     customSoundData: "",
-    customSoundFilename: ""
+    customSoundFilename: "",
+    muteOtherTabs: false
 };
 
 /**
@@ -62,7 +63,7 @@ const restoreOptions = async () => {
     try {
         const result = await browserAPI.storage.local.get([
             'volume', 'showMinutes', 'loopDisabled', 
-            'useAdvancedTimers', 'soundEnabled', 'customSound', 'customSoundData', 'customSoundFilename'
+            'useAdvancedTimers', 'soundEnabled', 'customSound', 'customSoundData', 'customSoundFilename', 'muteOtherTabs'
         ]);
         
         context.volume = result.volume !== undefined ? result.volume : 100;
@@ -73,6 +74,7 @@ const restoreOptions = async () => {
         context.customSound = result.customSound !== undefined ? result.customSound : false;
         context.customSoundData = result.customSoundData || "";
         context.customSoundFilename = result.customSoundFilename || "";
+        context.muteOtherTabs = result.muteOtherTabs !== undefined ? result.muteOtherTabs : false;
     } catch(e) {
         console.warn("could not load options from storage, trying localStorage: " + e);
         // Fallback to localStorage
@@ -87,6 +89,7 @@ const restoreOptions = async () => {
         context.customSound = (localStorage.customSound === true || localStorage.customSound === "true");
         context.customSoundData = localStorage.customSoundData || "";
         context.customSoundFilename = localStorage.customSoundFilename || "";
+        context.muteOtherTabs = (localStorage.muteOtherTabs === true || localStorage.muteOtherTabs === "true");
     }
     
     document.getElementById("volume_value").innerText = context["volume"];
@@ -95,18 +98,21 @@ const restoreOptions = async () => {
     document.getElementById("loopDisabled").checked = context.loopDisabled;
     document.getElementById("useAdvancedTimers").checked = context.useAdvancedTimers;
     document.getElementById("soundEnabled").checked = context.soundEnabled;
+    document.getElementById("muteOtherTabs").checked = context.muteOtherTabs;
     
     let soundEnabledElt = document.getElementById("soundEnabled");
     let customSoundElt = document.getElementById("customSound");
     let soundFileElt = document.getElementById("soundFile");
     let volumeElt = document.getElementById("volume");
     let volumeTestElt = document.getElementById("volume_test");
+    let muteOtherTabsElt = document.getElementById("muteOtherTabs");
 
     const updateSoundControls = () => {
         const soundEnabled = soundEnabledElt.checked;
         customSoundElt.disabled = !soundEnabled;
         soundFileElt.disabled = !soundEnabled;
         volumeElt.disabled = !soundEnabled;
+        muteOtherTabsElt.disabled = !soundEnabled;
         volumeTestElt.style.opacity = soundEnabled ? "1" : "0.5";
         volumeTestElt.style.pointerEvents = soundEnabled ? "auto" : "none";
         
@@ -125,6 +131,35 @@ const restoreOptions = async () => {
     document.getElementById("customSound").onchange = (evt) => {
         context.customSound = customSoundElt.checked;
         updateSoundControls();
+    };
+
+    // Handle mute other tabs checkbox - must be synchronous for permission request
+    document.getElementById("muteOtherTabs").onchange = (evt) => {
+        const wantsToEnable = muteOtherTabsElt.checked;
+        
+        if (wantsToEnable) {
+            showPopupMessage("Requesting permission to access tab information...", "info");
+            
+            // Call permissions.request synchronously - no await!
+            browserAPI.permissions.request({ permissions: ['tabs'] }).then((granted) => {
+                if (granted) {
+                    context.muteOtherTabs = true;
+                    showPopupMessage("Permission granted! Click SAVE to apply the changes.", "success");
+                } else {
+                    context.muteOtherTabs = false;
+                    muteOtherTabsElt.checked = false;
+                    showPopupMessage("Permission denied. Feature will not be enabled.", "error");
+                }
+            }).catch((e) => {
+                console.error("Error requesting permission:", e);
+                context.muteOtherTabs = false;
+                muteOtherTabsElt.checked = false;
+                showPopupMessage("Error requesting permission: " + e.message, "error");
+            });
+        } else {
+            context.muteOtherTabs = false;
+            showPopupMessage("Mute tabs feature disabled. Click SAVE to apply.", "info");
+        }
     };
     
     customSoundElt.checked = context.customSound;
@@ -157,6 +192,13 @@ const restoreOptions = async () => {
         if (!context.soundEnabled) {
             return; // Don't play sound if disabled
         }
+        
+        // Stop any currently playing test sound
+        if (context.ring && !context.ring.paused) {
+            context.ring.pause();
+            context.ring.currentTime = 0;
+        }
+        
         context.ring = document.createElement("audio");
 
         if (context.customSound && context.customSoundData) {
@@ -165,10 +207,9 @@ const restoreOptions = async () => {
             context.ring.setAttribute("src", "sound/bell-ringing-02.mp3");
         }
         context.ring.volume = context.volume / 100;
+        
+        // Play the sound completely, no timeout
         context.ring.play();
-        window.setTimeout(() => {
-            context.ring.pause();
-        }, 5000);
     };
     // Export buttons are available in all browsers
     document.getElementById("exportStatsJSON").onclick = exportStatsJSON;
@@ -198,7 +239,8 @@ const saveOptions = async (evt) => {
             soundEnabled: document.getElementById("soundEnabled").checked,
             customSound: document.getElementById("customSound").checked,
             customSoundData: context.customSoundData,
-            customSoundFilename: context.customSoundFilename
+            customSoundFilename: context.customSoundFilename,
+            muteOtherTabs: context.muteOtherTabs
         });
         
         showPopupMessage("Options saved successfully!", "success");
@@ -219,6 +261,7 @@ const saveOptions = async (evt) => {
             localStorage.customSound = document.getElementById("customSound").checked;
             localStorage.customSoundData = context.customSoundData;
             localStorage.customSoundFilename = context.customSoundFilename;
+            localStorage.muteOtherTabs = context.muteOtherTabs;
             
             showPopupMessage("Options saved successfully!", "success");
             
@@ -262,13 +305,14 @@ const exportStats = (format) => {
     if (browserAPI.downloads === undefined) {
         browserAPI.permissions.request({
             permissions: ['downloads']
-        }, (granted) => {
-
+        }).then((granted) => {
             if (granted) {
-                exportStats(format);
-            } else {
+                exportStats(format);            } else {
                 showPopupMessage("Download permission is required to export statistics.", "error");
             }
+        }).catch((e) => {
+            console.error("Error requesting download permission:", e);
+            showPopupMessage("Error requesting download permission.", "error");
         });
     } else {
         if (!format) { format = "json"; }
