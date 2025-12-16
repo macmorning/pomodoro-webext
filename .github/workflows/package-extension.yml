@@ -1,42 +1,22 @@
 name: Package Extension
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-  workflow_dispatch:
+  release:
+    types: [published]
 
 jobs:
   package:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Create Chrome package
+    - name: Show context
       run: |
-        mkdir -p dist/chrome
-        # Copy Chrome-specific manifest
-        cp manifest.json dist/chrome/
-        # Copy core extension files
-        cp background.js dist/chrome/
-        cp pomodoro.js dist/chrome/
-        cp pomodoro.html dist/chrome/
-        cp pomodoro.css dist/chrome/
-        cp options.js dist/chrome/
-        cp options.html dist/chrome/
-        cp news.js dist/chrome/
-        cp news.html dist/chrome/
-        cp news.json dist/chrome/
-        cp offscreen.js dist/chrome/
-        cp offscreen.html dist/chrome/
-        # Copy directories
-        cp -r icons dist/chrome/
-        cp -r sound dist/chrome/
-        cd dist/chrome
-        zip -r ../pomodoro-chrome.zip .
-    
+        echo github.event.action = ${{ github.event.action }}
+        echo github.event_name = ${{ github.event_name }}
+
+    - name: Checkout code
+      uses: actions/checkout@v4
+
     - name: Create Firefox package
       run: |
         mkdir -p dist/firefox
@@ -64,11 +44,7 @@ jobs:
       run: |
         mkdir -p dist/chromium
         # Copy Chromium-specific manifest (if different from Chrome)
-        if [ -f manifest-chromium.json ]; then
-          cp manifest-chromium.json dist/chromium/manifest.json
-        else
-          cp manifest.json dist/chromium/
-        fi
+        cp manifest-chromium.json dist/chromium/manifest.json
         # Copy core extension files
         cp background.js dist/chromium/
         cp pomodoro.js dist/chromium/
@@ -87,20 +63,14 @@ jobs:
         cd dist/chromium
         zip -r ../pomodoro-chromium.zip .
     
-    - name: Upload Chrome package
-      uses: actions/upload-artifact@v3
-      with:
-        name: pomodoro-chrome
-        path: dist/pomodoro-chrome.zip
-    
     - name: Upload Firefox package
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: pomodoro-firefox
         path: dist/pomodoro-firefox.zip
     
     - name: Upload Chromium package
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: pomodoro-chromium
         path: dist/pomodoro-chromium.zip
