@@ -11,6 +11,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === 'PLAY_SOUND') {
         try {
             const soundSrc = message.soundData || 'sound/bell-ringing-02.mp3';
+            const mutedTabs = message.mutedTabs || [];
             
             // Only change src if different to avoid reloading
             if (currentSrc !== soundSrc) {
@@ -23,21 +24,33 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             // Reset to beginning if already playing
             audio.currentTime = 0;
             
+            // Set up onended handler to unmute tabs when sound finishes
+            audio.onended = () => {
+                console.log('Audio playback ended naturally');
+                if (mutedTabs.length > 0) {
+                    chrome.runtime.sendMessage({
+                        type: 'UNMUTE_TABS',
+                        mutedTabs: mutedTabs
+                    }).catch((e) => {
+                        console.warn('Could not send unmute message:', e);
+                    });
+                }
+            };
+            
             audio.play().then(() => {
-                console.log('Audio started playing');
+                console.log('Audio started playing, will unmute tabs when finished');
                 sendResponse({ success: true });
             }).catch((e) => {
                 console.error('Error playing sound:', e);
+                // Unmute tabs immediately if playback failed
+                if (mutedTabs.length > 0) {
+                    chrome.runtime.sendMessage({
+                        type: 'UNMUTE_TABS',
+                        mutedTabs: mutedTabs
+                    });
+                }
                 sendResponse({ success: false, error: e.message });
             });
-            
-            // Stop after 5 seconds
-            setTimeout(() => {
-                if (!audio.paused) {
-                    audio.pause();
-                    audio.currentTime = 0;
-                }
-            }, 5000);
             
         } catch (e) {
             console.error('Error in sound handler:', e);
