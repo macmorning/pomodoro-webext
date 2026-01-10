@@ -37,6 +37,13 @@ const clock = {
             }
         });
     },
+    addMinute: (minutes) => {
+        chrome.runtime.sendMessage({ "command": "addMinute", "minutes": minutes }, (response) => {
+            if (response) {
+                clock.getCurrentState("addMinute");
+            }
+        });
+    },
     getCurrentState: (caller = "unknown") => {
         chrome.runtime.sendMessage({ "command": "getCurrentState" }, (response) => {
             if (response && typeof response === 'object' && response.seconds !== undefined) {
@@ -50,6 +57,7 @@ const clock = {
                 clock.advancedTimers = response.advancedTimers || [30, 5];
                 clock.loopDisabled = response.loopDisabled || false;
                 clock.inARow = response.inARow || 0;
+                clock.dailyStreakMinutes = response.dailyStreakMinutes || 0;
             } else {
                 console.log("No valid state object received from", caller, ", using fallback values");
                 // Fallback values if no response or invalid response
@@ -149,14 +157,30 @@ const clock = {
         document.getElementById("timeCounter").innerText = minutes.toString().padStart(2, "0") + ":" + seconds.toString().padStart(2, "0");
 
         document.getElementById("startBtn").innerText = (clock.ticking ? "Reset" : "Start!");
+        document.getElementById("pauseBtn").innerText = (clock.paused ? "Resume" : "Pause");
         document.getElementById("onABreak").innerText = (clock.onABreak ? "relax!" : "on a streak");
         document.getElementById("onABreak").style.display = (clock.ticking ? "block" : "none");
         document.getElementById("streaksCounterValue").innerText = clock.inARow || 0;
         document.getElementById("streaksCounter").style.display = (clock.inARow > 1 ? "block" : "none");
+        
+        document.getElementById("dailyStreakCounterValue").innerText = clock.dailyStreakMinutes || 0;
+        document.getElementById("dailyStreakCounter").style.display = (clock.dailyStreakMinutes > 0 ? "block" : "none");
         if (clock.ticking) {
             document.getElementById("skipBtn").removeAttribute("disabled");
+            document.getElementById("pauseBtn").removeAttribute("disabled");
+            document.getElementById("plusBtn").removeAttribute("disabled");
+            
+            // Disable minus button if 1 minute or less remaining
+            if (clock.seconds <= 60) {
+                document.getElementById("minusBtn").setAttribute("disabled", "disabled");
+            } else {
+                document.getElementById("minusBtn").removeAttribute("disabled");
+            }
         } else {
             document.getElementById("skipBtn").setAttribute("disabled", "disabled");
+            document.getElementById("pauseBtn").setAttribute("disabled", "disabled");
+            document.getElementById("plusBtn").setAttribute("disabled", "disabled");
+            document.getElementById("minusBtn").setAttribute("disabled", "disabled");
         }
     },
     tick: () => {
@@ -291,6 +315,57 @@ const clock = {
         }
     },
 
+    showStreakHistory: () => {
+        // Show loading state
+        document.getElementById("streakHistoryContent").innerHTML = '<div class="loading">Loading...</div>';
+        document.getElementById("streakHistoryPopup").style.display = "block";
+        document.getElementById("historyOverlay").style.display = "block";
+        
+        // Fetch history data
+        chrome.runtime.sendMessage({ "command": "getStreakHistory" }, (response) => {
+            if (response && Array.isArray(response)) {
+                clock.renderStreakHistory(response);
+            } else {
+                document.getElementById("streakHistoryContent").innerHTML = '<div class="no-data">No data available</div>';
+            }
+        });
+    },
+
+    hideStreakHistory: () => {
+        document.getElementById("streakHistoryPopup").style.display = "none";
+        document.getElementById("historyOverlay").style.display = "none";
+    },
+
+    renderStreakHistory: (historyData) => {
+        const content = document.getElementById("streakHistoryContent");
+        
+        if (!historyData || historyData.length === 0) {
+            content.innerHTML = '<div class="no-data">No streak data yet.<br>Complete some streaks to see your history!</div>';
+            return;
+        }
+        
+        // Find max minutes for scaling bars
+        const maxMinutes = Math.max(...historyData.map(day => day.minutes), 1);
+        
+        let html = '';
+        historyData.forEach(day => {
+            const barWidth = (day.minutes / maxMinutes) * 100;
+            const isToday = day.isToday ? ' style="font-weight: bold;"' : '';
+            
+            html += `
+                <div class="history-day">
+                    <div class="history-date"${isToday}>${day.shortDate}</div>
+                    <div class="history-bar-container">
+                        <div class="history-bar" style="width: ${barWidth}%"></div>
+                    </div>
+                    <div class="history-minutes"${isToday}>${day.minutes}</div>
+                </div>
+            `;
+        });
+        
+        content.innerHTML = html;
+    },
+
 
 };
 
@@ -366,7 +441,29 @@ window.onload = () => {
     document.getElementById("advancedTimersInput").dispatchEvent(new Event("input"));
     document.getElementById("startBtn").onclick = () => { if (!clock.ticking) { clock.start(); } else { clock.reset(); } };
     document.getElementById("skipBtn").onclick = () => { if (clock.ticking) { clock.skip(); } };
-    document.getElementById("clockContainer").onclick = function () { clock.pause(); };
+    //document.getElementById("clockContainer").onclick = () => { clock.pause(); };
+    document.getElementById("pauseBtn").onclick = () => { clock.pause(); };
+    document.getElementById("plusBtn").onclick = (e) => { 
+        e.stopPropagation(); 
+        clock.addMinute(1); 
+    };
+    document.getElementById("minusBtn").onclick = (e) => { 
+        e.stopPropagation(); 
+        clock.addMinute(-1); 
+    };
+
+    // Streak history popup functionality
+    document.getElementById("dailyStreakCounter").onclick = () => {
+        clock.showStreakHistory();
+    };
+    
+    document.getElementById("closeHistoryBtn").onclick = () => {
+        clock.hideStreakHistory();
+    };
+    
+    document.getElementById("historyOverlay").onclick = () => {
+        clock.hideStreakHistory();
+    };
 
     setInterval(() => {
         clock.tick();

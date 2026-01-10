@@ -57,17 +57,39 @@
             <label title="Comma separated numbers, ex: 30,5,30,5,30,10" for="advancedTimersInput">Timers: <img src="../icons/question.png" width="15px"/></label><br/>
             <input id="advancedTimersInput" name="advancedTimersInput" type="text">
           </div>
-
           <button id="startBtn">Start!</button>
-          <button id="skipBtn">Skip</button>
+          <div id="actionButtons">
+            <button id="skipBtn">Skip</button>
+            <button id="pauseBtn">Pause</button>
+          </div>
       </div>
       <div id="clockContainer" title="click to pause">
-        <div id="timeCounter"></div>
+        <div id="timerControls">
+          <button id="minusBtn" class="timer-adjust-btn" title="Remove 1 minute">-</button>
+          <div id="timeCounter"></div>
+          <button id="plusBtn" class="timer-adjust-btn" title="Add 1 minute">+</button>
+        </div>
         <div id="onABreak"></div>
         <div id="streaksCounter">
           <div id="streaksCounterValue"></div>
           <div id="streaksCounterText">streaks completed</div>
         </div>
+        <div id="dailyStreakCounter">
+          <div id="dailyStreakCounterValue"></div>
+          <div id="dailyStreakCounterText">streak minutes today</div>
+        </div>
+        
+        <!-- Streak History Popup -->
+        <div id="streakHistoryPopup" class="history-popup">
+          <div class="history-header">
+            <h3>Streak Minutes - Last 30 Days</h3>
+            <button id="closeHistoryBtn" class="close-btn">&times;</button>
+          </div>
+          <div id="streakHistoryContent" class="history-content">
+            <div class="loading">Loading...</div>
+          </div>
+        </div>
+        <div id="historyOverlay" class="history-overlay"></div>
         <svg id="clock" viewBox="0 0 100 100">
             <defs>
                 <clipPath id="clipClock">

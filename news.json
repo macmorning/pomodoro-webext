@@ -1,6 +1,17 @@
 {
     "news": [
         {
+            "version": "2.9.0",
+            "date": "2026-01-10",
+            "title": "New Features Update",
+            "items": [
+                "Added + and - buttons to add or remove a minute to clock",
+                "Added a pause/resume button",
+                "Added a 'streak minutes today' counter",
+                "Click this new counter to show stats for last 30 days"
+            ]
+        },
+        {
             "version": "2.8.0",
             "date": "2025-12-16",
             "title": "New Features Update",
