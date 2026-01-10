@@ -1,6 +1,15 @@
 {
     "news": [
         {
+            "version": "2.9.0",
+            "date": "2026-01-10",
+            "title": "New Features Update",
+            "items": [
+                "Added + and - buttons to add or remove a minute to current clock",
+                "Added a pause/resume button"
+            ]
+        },
+        {
             "version": "2.8.0",
             "date": "2025-12-16",
             "title": "New Features Update",

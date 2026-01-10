@@ -240,6 +240,49 @@ const clock = {
         return true;
     },
 
+    addMinute: async (minutes) => {
+        if (!clock.ticking) { return false; }
+        
+        // Calculate current remaining seconds
+        let currentSeconds;
+        if (clock.paused) {
+            currentSeconds = clock.seconds;
+        } else {
+            currentSeconds = Math.floor((clock.alarmAt - Date.now()) / 1000);
+        }
+        
+        // If trying to remove time and there's 1 minute or less left, don't allow it
+        if (minutes < 0 && currentSeconds <= 60) {
+            console.log("Cannot remove time: 1 minute or less remaining");
+            return false;
+        }
+        
+        // Add the specified minutes (can be positive or negative)
+        const additionalSeconds = minutes * 60;
+        
+        if (clock.paused) {
+            // If paused, just update the seconds directly
+            clock.seconds = Math.max(1, clock.seconds + additionalSeconds);
+        } else {
+            // If running, update the alarm time
+            clock.alarmAt = Math.max(Date.now() + 1000, clock.alarmAt + (additionalSeconds * 1000));
+            clock.seconds = Math.floor((clock.alarmAt - Date.now()) / 1000);
+            
+            // Update the alarms with new time
+            await browserAPI.alarms.clear("alarm");
+            await browserAPI.alarms.create("alarm", { "when": clock.alarmAt });
+        }
+        
+        // Update badge and save state
+        await clock.updateBadge(Math.round(clock.seconds / 60));
+        await clock.saveState();
+        
+        // Log the event
+        db.addEvent(minutes > 0 ? "time_added" : "time_removed");
+        
+        return true;
+    },
+
     getCurrentState: () => {
         if (clock.ticking && !clock.paused) {
             clock.seconds = Math.floor((clock.alarmAt - Date.now()) / 1000);
@@ -734,6 +777,9 @@ const msgListener = (message, sender, sendResponse) => {
             sendResponse(true);
         } else if (message.command === "pause") {
             await clock.pause();
+            sendResponse(true);
+        } else if (message.command === "addMinute") {
+            await clock.addMinute(message.minutes);
             sendResponse(true);
         } else if (message.command === "getStats") {
             const stats = await db.getStats();

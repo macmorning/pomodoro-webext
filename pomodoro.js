@@ -37,6 +37,13 @@ const clock = {
             }
         });
     },
+    addMinute: (minutes) => {
+        chrome.runtime.sendMessage({ "command": "addMinute", "minutes": minutes }, (response) => {
+            if (response) {
+                clock.getCurrentState("addMinute");
+            }
+        });
+    },
     getCurrentState: (caller = "unknown") => {
         chrome.runtime.sendMessage({ "command": "getCurrentState" }, (response) => {
             if (response && typeof response === 'object' && response.seconds !== undefined) {
@@ -157,9 +164,19 @@ const clock = {
         if (clock.ticking) {
             document.getElementById("skipBtn").removeAttribute("disabled");
             document.getElementById("pauseBtn").removeAttribute("disabled");
+            document.getElementById("plusBtn").removeAttribute("disabled");
+            
+            // Disable minus button if 1 minute or less remaining
+            if (clock.seconds <= 60) {
+                document.getElementById("minusBtn").setAttribute("disabled", "disabled");
+            } else {
+                document.getElementById("minusBtn").removeAttribute("disabled");
+            }
         } else {
             document.getElementById("skipBtn").setAttribute("disabled", "disabled");
             document.getElementById("pauseBtn").setAttribute("disabled", "disabled");
+            document.getElementById("plusBtn").setAttribute("disabled", "disabled");
+            document.getElementById("minusBtn").setAttribute("disabled", "disabled");
         }
     },
     tick: () => {
@@ -371,6 +388,14 @@ window.onload = () => {
     document.getElementById("skipBtn").onclick = () => { if (clock.ticking) { clock.skip(); } };
     document.getElementById("clockContainer").onclick = () => { clock.pause(); };
     document.getElementById("pauseBtn").onclick = () => { clock.pause(); };
+    document.getElementById("plusBtn").onclick = (e) => { 
+        e.stopPropagation(); 
+        clock.addMinute(1); 
+    };
+    document.getElementById("minusBtn").onclick = (e) => { 
+        e.stopPropagation(); 
+        clock.addMinute(-1); 
+    };
 
     setInterval(() => {
         clock.tick();

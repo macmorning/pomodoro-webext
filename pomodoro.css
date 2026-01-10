@@ -295,6 +295,23 @@ button {
   font-weight: bold;
 }
 
+
+/* Timer controls container */
+#timerControls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  position: relative;
+  z-index: 20;
+}
+
+/* Timer adjustment buttons */
+.timer-adjust-btn {
+  display: flex;
+  justify-content: center;
+}
+
 /* Action buttons container for side-by-side layout */
 #actionButtons {
   display: flex;
