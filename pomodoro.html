@@ -78,6 +78,18 @@
           <div id="dailyStreakCounterValue"></div>
           <div id="dailyStreakCounterText">streak minutes today</div>
         </div>
+        
+        <!-- Streak History Popup -->
+        <div id="streakHistoryPopup" class="history-popup">
+          <div class="history-header">
+            <h3>Streak Minutes - Last 30 Days</h3>
+            <button id="closeHistoryBtn" class="close-btn">&times;</button>
+          </div>
+          <div id="streakHistoryContent" class="history-content">
+            <div class="loading">Loading...</div>
+          </div>
+        </div>
+        <div id="historyOverlay" class="history-overlay"></div>
         <svg id="clock" viewBox="0 0 100 100">
             <defs>
                 <clipPath id="clipClock">

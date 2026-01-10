@@ -315,6 +315,57 @@ const clock = {
         }
     },
 
+    showStreakHistory: () => {
+        // Show loading state
+        document.getElementById("streakHistoryContent").innerHTML = '<div class="loading">Loading...</div>';
+        document.getElementById("streakHistoryPopup").style.display = "block";
+        document.getElementById("historyOverlay").style.display = "block";
+        
+        // Fetch history data
+        chrome.runtime.sendMessage({ "command": "getStreakHistory" }, (response) => {
+            if (response && Array.isArray(response)) {
+                clock.renderStreakHistory(response);
+            } else {
+                document.getElementById("streakHistoryContent").innerHTML = '<div class="no-data">No data available</div>';
+            }
+        });
+    },
+
+    hideStreakHistory: () => {
+        document.getElementById("streakHistoryPopup").style.display = "none";
+        document.getElementById("historyOverlay").style.display = "none";
+    },
+
+    renderStreakHistory: (historyData) => {
+        const content = document.getElementById("streakHistoryContent");
+        
+        if (!historyData || historyData.length === 0) {
+            content.innerHTML = '<div class="no-data">No streak data yet.<br>Complete some streaks to see your history!</div>';
+            return;
+        }
+        
+        // Find max minutes for scaling bars
+        const maxMinutes = Math.max(...historyData.map(day => day.minutes), 1);
+        
+        let html = '';
+        historyData.forEach(day => {
+            const barWidth = (day.minutes / maxMinutes) * 100;
+            const isToday = day.isToday ? ' style="font-weight: bold;"' : '';
+            
+            html += `
+                <div class="history-day">
+                    <div class="history-date"${isToday}>${day.shortDate}</div>
+                    <div class="history-bar-container">
+                        <div class="history-bar" style="width: ${barWidth}%"></div>
+                    </div>
+                    <div class="history-minutes"${isToday}>${day.minutes}</div>
+                </div>
+            `;
+        });
+        
+        content.innerHTML = html;
+    },
+
 
 };
 
@@ -399,6 +450,19 @@ window.onload = () => {
     document.getElementById("minusBtn").onclick = (e) => { 
         e.stopPropagation(); 
         clock.addMinute(-1); 
+    };
+
+    // Streak history popup functionality
+    document.getElementById("dailyStreakCounter").onclick = () => {
+        clock.showStreakHistory();
+    };
+    
+    document.getElementById("closeHistoryBtn").onclick = () => {
+        clock.hideStreakHistory();
+    };
+    
+    document.getElementById("historyOverlay").onclick = () => {
+        clock.hideStreakHistory();
     };
 
     setInterval(() => {

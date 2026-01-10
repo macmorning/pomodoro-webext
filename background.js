@@ -293,7 +293,7 @@ const clock = {
 
     // Daily streak minutes tracking
     addDailyStreakMinutes: async (minutes) => {
-        const today = new Date().toDateString(); // Get today's date as string
+        const today = new Date().toISOString().split('T')[0]; // Get yyyy-mm-dd format
         
         try {
             // Get current daily streak data from storage
@@ -311,10 +311,11 @@ const clock = {
             // Clean up old entries (keep only last 30 days)
             const thirtyDaysAgo = new Date();
             thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            const thirtyDaysAgoISO = thirtyDaysAgo.toISOString().split('T')[0];
             
-            Object.keys(dailyData).forEach(date => {
-                if (new Date(date) < thirtyDaysAgo) {
-                    delete dailyData[date];
+            Object.keys(dailyData).forEach(dateKey => {
+                if (dateKey < thirtyDaysAgoISO) {
+                    delete dailyData[dateKey];
                 }
             });
             
@@ -329,7 +330,7 @@ const clock = {
     },
 
     getDailyStreakMinutes: async () => {
-        const today = new Date().toDateString();
+        const today = new Date().toISOString().split('T')[0]; // Get yyyy-mm-dd format
         
         try {
             const result = await browserAPI.storage.local.get(['dailyStreakMinutes']);
@@ -362,6 +363,38 @@ const clock = {
         
         // Convert to minutes and round down
         return Math.floor(elapsedSeconds / 60);
+    },
+
+    getStreakHistory: async () => {
+        try {
+            const result = await browserAPI.storage.local.get(['dailyStreakMinutes']);
+            const dailyData = result.dailyStreakMinutes || {};
+            // Generate last 30 days and filter out days with no data
+            const history = [];
+            const today = new Date();
+            
+            for (let i = 0; i <= 29; i++) {
+                const date = new Date(today);
+                date.setDate(date.getDate() - i);
+                const dateKey = date.toISOString().split('T')[0]; // yyyy-mm-dd format
+                const minutes = dailyData[dateKey] || 0;
+                
+                // Only include days with data (minutes > 0)
+                if (minutes > 0) {
+                    history.push({
+                        date: dateKey,
+                        shortDate: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                        minutes: minutes,
+                        isToday: i === 0
+                    });
+                }
+            }
+            
+            return history;
+        } catch (e) {
+            console.warn("Could not get streak history:", e);
+            return [];
+        }
     },
 
     getCurrentState: async () => {
@@ -897,6 +930,9 @@ const msgListener = (message, sender, sendResponse) => {
         } else if (message.command === "getStats") {
             const stats = await db.getStats();
             sendResponse(stats);
+        } else if (message.command === "getStreakHistory") {
+            const history = await clock.getStreakHistory();
+            sendResponse(history);
         }
     };
 
