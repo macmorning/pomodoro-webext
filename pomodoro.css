@@ -295,6 +295,18 @@ button {
   font-weight: bold;
 }
 
+/* Action buttons container for side-by-side layout */
+#actionButtons {
+  display: flex;
+  gap: 6px;
+  margin: 3px 0;
+}
+
+#actionButtons button {
+  flex: 1;
+  margin: 0;
+}
+
 #exportStatsJSON,
 #exportStatsCSV {
   display: none;

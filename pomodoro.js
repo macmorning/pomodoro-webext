@@ -149,14 +149,17 @@ const clock = {
         document.getElementById("timeCounter").innerText = minutes.toString().padStart(2, "0") + ":" + seconds.toString().padStart(2, "0");
 
         document.getElementById("startBtn").innerText = (clock.ticking ? "Reset" : "Start!");
+        document.getElementById("pauseBtn").innerText = (clock.paused ? "Resume" : "Pause");
         document.getElementById("onABreak").innerText = (clock.onABreak ? "relax!" : "on a streak");
         document.getElementById("onABreak").style.display = (clock.ticking ? "block" : "none");
         document.getElementById("streaksCounterValue").innerText = clock.inARow || 0;
         document.getElementById("streaksCounter").style.display = (clock.inARow > 1 ? "block" : "none");
         if (clock.ticking) {
             document.getElementById("skipBtn").removeAttribute("disabled");
+            document.getElementById("pauseBtn").removeAttribute("disabled");
         } else {
             document.getElementById("skipBtn").setAttribute("disabled", "disabled");
+            document.getElementById("pauseBtn").setAttribute("disabled", "disabled");
         }
     },
     tick: () => {
@@ -366,7 +369,8 @@ window.onload = () => {
     document.getElementById("advancedTimersInput").dispatchEvent(new Event("input"));
     document.getElementById("startBtn").onclick = () => { if (!clock.ticking) { clock.start(); } else { clock.reset(); } };
     document.getElementById("skipBtn").onclick = () => { if (clock.ticking) { clock.skip(); } };
-    document.getElementById("clockContainer").onclick = function () { clock.pause(); };
+    document.getElementById("clockContainer").onclick = () => { clock.pause(); };
+    document.getElementById("pauseBtn").onclick = () => { clock.pause(); };
 
     setInterval(() => {
         clock.tick();
