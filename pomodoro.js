@@ -57,6 +57,7 @@ const clock = {
                 clock.advancedTimers = response.advancedTimers || [30, 5];
                 clock.loopDisabled = response.loopDisabled || false;
                 clock.inARow = response.inARow || 0;
+                clock.dailyStreakMinutes = response.dailyStreakMinutes || 0;
             } else {
                 console.log("No valid state object received from", caller, ", using fallback values");
                 // Fallback values if no response or invalid response
@@ -161,6 +162,9 @@ const clock = {
         document.getElementById("onABreak").style.display = (clock.ticking ? "block" : "none");
         document.getElementById("streaksCounterValue").innerText = clock.inARow || 0;
         document.getElementById("streaksCounter").style.display = (clock.inARow > 1 ? "block" : "none");
+        
+        document.getElementById("dailyStreakCounterValue").innerText = clock.dailyStreakMinutes || 0;
+        document.getElementById("dailyStreakCounter").style.display = (clock.dailyStreakMinutes > 0 ? "block" : "none");
         if (clock.ticking) {
             document.getElementById("skipBtn").removeAttribute("disabled");
             document.getElementById("pauseBtn").removeAttribute("disabled");
@@ -386,7 +390,7 @@ window.onload = () => {
     document.getElementById("advancedTimersInput").dispatchEvent(new Event("input"));
     document.getElementById("startBtn").onclick = () => { if (!clock.ticking) { clock.start(); } else { clock.reset(); } };
     document.getElementById("skipBtn").onclick = () => { if (clock.ticking) { clock.skip(); } };
-    document.getElementById("clockContainer").onclick = () => { clock.pause(); };
+    //document.getElementById("clockContainer").onclick = () => { clock.pause(); };
     document.getElementById("pauseBtn").onclick = () => { clock.pause(); };
     document.getElementById("plusBtn").onclick = (e) => { 
         e.stopPropagation(); 

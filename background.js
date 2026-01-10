@@ -199,6 +199,14 @@ const clock = {
     },
 
     reset: async () => {
+        // Track actual elapsed streak minutes if resetting during an active streak
+        if (clock.ticking && !clock.onABreak) {
+            const elapsedMinutes = clock.getElapsedStreakMinutes();
+            if (elapsedMinutes > 0) {
+                await clock.addDailyStreakMinutes(elapsedMinutes);
+            }
+        }
+        
         clock.ticking = false;
         clock.paused = false;
         if (clock.useAdvancedTimers) {
@@ -283,7 +291,80 @@ const clock = {
         return true;
     },
 
-    getCurrentState: () => {
+    // Daily streak minutes tracking
+    addDailyStreakMinutes: async (minutes) => {
+        const today = new Date().toDateString(); // Get today's date as string
+        
+        try {
+            // Get current daily streak data from storage
+            const result = await browserAPI.storage.local.get(['dailyStreakMinutes']);
+            let dailyData = result.dailyStreakMinutes || {};
+            
+            // Initialize today's count if it doesn't exist
+            if (!dailyData[today]) {
+                dailyData[today] = 0;
+            }
+            
+            // Add the minutes to today's total
+            dailyData[today] += minutes;
+            
+            // Clean up old entries (keep only last 30 days)
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            
+            Object.keys(dailyData).forEach(date => {
+                if (new Date(date) < thirtyDaysAgo) {
+                    delete dailyData[date];
+                }
+            });
+            
+            // Save back to storage
+            await browserAPI.storage.local.set({ dailyStreakMinutes: dailyData });
+            
+            console.log(`Added ${minutes} streak minutes for ${today}. Total: ${dailyData[today]}`);
+            
+        } catch (e) {
+            console.warn("Could not save daily streak minutes:", e);
+        }
+    },
+
+    getDailyStreakMinutes: async () => {
+        const today = new Date().toDateString();
+        
+        try {
+            const result = await browserAPI.storage.local.get(['dailyStreakMinutes']);
+            const dailyData = result.dailyStreakMinutes || {};
+            return dailyData[today] || 0;
+        } catch (e) {
+            console.warn("Could not get daily streak minutes:", e);
+            return 0;
+        }
+    },
+
+    // Calculate actual elapsed time in current streak
+    getElapsedStreakMinutes: () => {
+        if (!clock.ticking || clock.onABreak) {
+            return 0;
+        }
+        
+        let elapsedSeconds;
+        if (clock.paused) {
+            // If paused, calculate based on original duration minus remaining seconds
+            elapsedSeconds = (clock.streakTimer * 60) - clock.seconds;
+        } else {
+            // If running, calculate based on alarm time
+            const remainingSeconds = Math.floor((clock.alarmAt - Date.now()) / 1000);
+            elapsedSeconds = (clock.streakTimer * 60) - remainingSeconds;
+        }
+        
+        // Ensure we don't return negative values
+        elapsedSeconds = Math.max(0, elapsedSeconds);
+        
+        // Convert to minutes and round down
+        return Math.floor(elapsedSeconds / 60);
+    },
+
+    getCurrentState: async () => {
         if (clock.ticking && !clock.paused) {
             clock.seconds = Math.floor((clock.alarmAt - Date.now()) / 1000);
         }
@@ -292,6 +373,9 @@ const clock = {
         if (!clock.ticking && (!clock.seconds || clock.seconds === 0)) {
             clock.seconds = (clock.streakTimer || 30) * 60;
         }
+
+        // Get daily streak minutes
+        const dailyStreakMinutes = await clock.getDailyStreakMinutes();
 
         // Ensure all values are valid
         return {
@@ -305,7 +389,8 @@ const clock = {
             "useAdvancedTimers": clock.useAdvancedTimers || false,
             "loopDisabled": clock.loopDisabled || false,
             "alarmAt": clock.alarmAt || 0,
-            "inARow": clock.inARow || 0
+            "inARow": clock.inARow || 0,
+            "dailyStreakMinutes": dailyStreakMinutes || 0
         };
     },
 
@@ -562,13 +647,17 @@ const clock = {
         }
     },
 
-    alarm: async (alarm) => {
+    alarm: async (alarmOrSkip) => {
         await clock.loadOptions();
         if (!clock.ticking || clock.paused) {
             return true;
         }
         
-        console.log("Alarm fired - loopDisabled:", clock.loopDisabled, "onABreak:", clock.onABreak, "alarm name:", alarm?.name);
+        // Check if this is a skip call (boolean) or an actual alarm object
+        const isSkip = typeof alarmOrSkip === 'boolean' && alarmOrSkip === true;
+        const alarm = isSkip ? null : alarmOrSkip;
+        
+        console.log("Alarm fired - isSkip:", isSkip, "loopDisabled:", clock.loopDisabled, "onABreak:", clock.onABreak, "alarm name:", alarm?.name);
 
         const actionAPI = isManifestV3 ? browserAPI.action : browserAPI.browserAction;
 
@@ -582,6 +671,18 @@ const clock = {
             // looping is disabled, stop now (but only after a work streak, not a break)
             if (clock.loopDisabled && !clock.onABreak) {
                 console.log("Single streak mode: stopping after work streak completion");
+                
+                // Track streak minutes for today
+                if (isSkip) {
+                    // For skip: track actual elapsed time
+                    const elapsedMinutes = clock.getElapsedStreakMinutes();
+                    if (elapsedMinutes > 0) {
+                        await clock.addDailyStreakMinutes(elapsedMinutes);
+                    }
+                } else {
+                    // For natural completion: track full streak duration
+                    await clock.addDailyStreakMinutes(clock.streakTimer);
+                }
                 
                 // Play notification sound
                 if (clock.soundEnabled) {
@@ -609,7 +710,20 @@ const clock = {
             
             console.log("Not in single streak mode or on a break, continuing with normal cycle");
 
-            if (!clock.onABreak) { clock.inARow++; }
+            if (!clock.onABreak) { 
+                clock.inARow++; 
+                // Track streak minutes for today
+                if (isSkip) {
+                    // For skip: track actual elapsed time
+                    const elapsedMinutes = clock.getElapsedStreakMinutes();
+                    if (elapsedMinutes > 0) {
+                        await clock.addDailyStreakMinutes(elapsedMinutes);
+                    }
+                } else {
+                    // For natural completion: track full streak duration
+                    await clock.addDailyStreakMinutes(clock.streakTimer);
+                }
+            }
             clock.onABreak = !clock.onABreak;
             db.addEvent("switched");
 
@@ -763,14 +877,13 @@ const msgListener = (message, sender, sendResponse) => {
         }
 
         if (message.command === "getCurrentState") {
-            const state = clock.getCurrentState();
-
+            const state = await clock.getCurrentState();
             sendResponse(state);
         } else if (message.command === "start") {
             await clock.start();
             sendResponse(true);
         } else if (message.command === "skip") {
-            await clock.alarm();
+            await clock.alarm(true); // Pass true to indicate this is a skip
             sendResponse(true);
         } else if (message.command === "reset") {
             await clock.reset();

@@ -353,11 +353,21 @@ button {
   text-align: right;
 }
 
-#streaksCounterValue {
+#dailyStreakCounter {
+  position: absolute;
+  bottom: 2px;
+  left: 2px;
+  font-size: 1.5em;
+  text-align: left;
+}
+
+#streaksCounterValue,
+#dailyStreakCounterValue {
   display: block;
 }
 
-#streaksCounterText {
+#streaksCounterText,
+#dailyStreakCounterText {
   display: block;
   font-size: 0.4em;
 }
@@ -371,7 +381,7 @@ button {
 
 #clockContainer {
   margin: auto;
-  cursor: pointer;
+  /*cursor: pointer;*/
   aspect-ratio: 1;
   width: 100%;
   max-width: 270px;
