@@ -1,6 +1,14 @@
 {
     "news": [
         {
+            "version": "2.9.1",
+            "date": "2026-01-23",
+            "title": "Bug fixes",
+            "items": [
+                "Added a fallback method to play the notification sound"
+            ]
+        },
+        {
             "version": "2.9.0",
             "date": "2026-01-10",
             "title": "New Features Update",
