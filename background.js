@@ -639,37 +639,79 @@ const clock = {
                 }
             } else {
                 // Use direct audio element for Firefox and Manifest V2
-                if (!clock.ring) {
-                    clock.ring = new Audio();
-                    clock.ring.preload = 'auto';
-                }
-
-                const soundSrc = (clock.customSound && clock.customSoundData)
-                    ? clock.customSoundData
-                    : "sound/bell-ringing-02.mp3";
-
-                // Only change src if different to avoid reloading
-                if (clock.ring.src !== soundSrc) {
-                    clock.ring.src = soundSrc;
-                }
-
-                clock.ring.volume = clock.volume / 100;
-
-                // Set up onended handler to unmute tabs when sound actually finishes
-                clock.ring.onended = () => {
-                    if (mutedTabs.length > 0) {
-                        clock.unmuteTabsById(mutedTabs);
+                // Add fallback for browsers where Audio is not available in service worker context
+                try {
+                    if (!clock.ring) {
+                        // Check if Audio constructor is available
+                        if (typeof Audio !== 'undefined') {
+                            clock.ring = new Audio();
+                            clock.ring.preload = 'auto';
+                        } else {
+                            throw new Error("Audio constructor not available in service worker context");
+                        }
                     }
-                };
 
-                // Play without awaiting to avoid blocking
-                clock.ring.play().catch((e) => {
-                    console.warn("Could not play audio: " + e);
-                    // Unmute tabs if playback failed
-                    if (mutedTabs.length > 0) {
-                        clock.unmuteTabsById(mutedTabs);
+                    const soundSrc = (clock.customSound && clock.customSoundData)
+                        ? clock.customSoundData
+                        : "sound/bell-ringing-02.mp3";
+
+                    // Only change src if different to avoid reloading
+                    if (clock.ring.src !== soundSrc) {
+                        clock.ring.src = soundSrc;
                     }
-                });
+
+                    clock.ring.volume = clock.volume / 100;
+
+                    // Set up onended handler to unmute tabs when sound actually finishes
+                    clock.ring.onended = () => {
+                        if (mutedTabs.length > 0) {
+                            clock.unmuteTabsById(mutedTabs);
+                        }
+                    };
+
+                    // Play without awaiting to avoid blocking
+                    clock.ring.play().catch((e) => {
+                        console.warn("Could not play audio: " + e);
+                        // Unmute tabs if playback failed
+                        if (mutedTabs.length > 0) {
+                            clock.unmuteTabsById(mutedTabs);
+                        }
+                    });
+                } catch (audioError) {
+                    console.warn("Audio fallback failed, trying offscreen document approach: " + audioError);
+                    
+                    // Fallback: Try to use offscreen document even for non-Manifest V3
+                    try {
+                        await clock.ensureOffscreenDocument();
+                        
+                        if (clock.offscreenReady) {
+                            chrome.runtime.sendMessage({
+                                type: 'PLAY_SOUND',
+                                soundData: clock.customSound ? clock.customSoundData : null,
+                                volume: clock.volume / 100,
+                                mutedTabs: mutedTabs
+                            }).catch((e) => {
+                                console.warn("Could not send audio message to offscreen: " + e);
+                                // Final fallback: just unmute tabs
+                                if (mutedTabs.length > 0) {
+                                    clock.unmuteTabsById(mutedTabs);
+                                }
+                            });
+                        } else {
+                            console.warn("All audio methods failed, skipping sound");
+                            // Unmute tabs immediately if we can't play sound
+                            if (mutedTabs.length > 0) {
+                                await clock.unmuteTabsById(mutedTabs);
+                            }
+                        }
+                    } catch (offscreenError) {
+                        console.warn("Offscreen fallback also failed: " + offscreenError);
+                        // Final cleanup
+                        if (mutedTabs.length > 0) {
+                            await clock.unmuteTabsById(mutedTabs);
+                        }
+                    }
+                }
             }
         } catch (e) {
             console.warn("Could not play notification sound: " + e);
